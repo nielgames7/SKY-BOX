@@ -66,7 +66,7 @@ CREATE TABLE reservas (
     id_casilla INT UNSIGNED NOT NULL,
     nombre_cliente VARCHAR(100) NOT NULL,
     telefono VARCHAR(20) NULL,
-    placa_vehiculo VARCHAR(15) NULL,                    -- Opcional si se aparta por reserva
+    placa_vehiculo VARCHAR(15) NOT NULL,
     codigo_reserva VARCHAR(20) NOT NULL UNIQUE,         -- PIN o código generado para el conductor
     fecha_hora_inicio DATETIME NOT NULL,
     fecha_hora_fin DATETIME NOT NULL,
@@ -87,10 +87,9 @@ CREATE TABLE reservas (
 CREATE TABLE registros (
     id_registro INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     id_reserva INT UNSIGNED NULL,                       -- Si ingresó con reserva previa
-    uid_rfid VARCHAR(32) NOT NULL,                      -- Código único de la tarjeta RFID (RC522)
-    token_qr VARCHAR(64) NOT NULL UNIQUE,               -- Hash único para consulta web móvil
+    uid_rfid VARCHAR(32) NOT NULL,                      -- UID leído por el módulo RC522
+    token_qr VARCHAR(64) NOT NULL UNIQUE,               -- Hash único para que el conductor consulte la web móvil
     id_casilla INT UNSIGNED NULL,                       -- Casilla ocupada
-    id_tarifa INT UNSIGNED NOT NULL DEFAULT 1,          -- Tarifa aplicada al ingreso
     fecha_ingreso DATETIME NOT NULL,
     fecha_salida DATETIME NULL,
     minutos_estadia INT UNSIGNED DEFAULT 0,             -- Minutos transcurridos calculados al salir
@@ -109,11 +108,6 @@ CREATE TABLE registros (
         REFERENCES casillas(id_casilla) 
         ON UPDATE CASCADE 
         ON DELETE SET NULL,
-    CONSTRAINT fk_registro_tarifa 
-        FOREIGN KEY (id_tarifa) 
-        REFERENCES tarifas(id_tarifa) 
-        ON UPDATE CASCADE 
-        ON DELETE RESTRICT,
     CONSTRAINT fk_registro_usuario 
         FOREIGN KEY (id_usuario) 
         REFERENCES usuarios(id_usuario) 
@@ -127,10 +121,10 @@ CREATE TABLE registros (
 -- DATOS INICIALES DE PRUEBA (Para la maqueta en Laragon)
 -- =====================================================================
 
--- Usuarios del sistema (contraseña de prueba verificada: 'admin123')
+-- Usuarios del sistema (contraseña de prueba: 'admin123')
 INSERT INTO usuarios (nombre, usuario, password, rol) VALUES
-('Carlos Méndez Rojas', 'admin', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'admin'),
-('Operador Portería', 'operador', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'operador');
+('Carlos Méndez Rojas', 'admin', '$2y$10$4n9x5rYQ7qjRsmZ1X3XQeeYQkZ2zWqUeY8PzO8d1yX6qYw5r0t4iu', 'admin'),
+('Operador Portería', 'operador', '$2y$10$4n9x5rYQ7qjRsmZ1X3XQeeYQkZ2zWqUeY8PzO8d1yX6qYw5r0t4iu', 'operador');
 
 -- Tarifa estándar
 INSERT INTO tarifas (nombre, costo_por_hora, costo_fraccion, minutos_tolerancia, activa) VALUES
