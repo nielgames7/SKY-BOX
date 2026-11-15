@@ -9,7 +9,6 @@ body {
   padding: 1.5rem;
   font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.5;
-  background-color: #ffffff;
   color: #111827;
 }
 
@@ -17,7 +16,7 @@ body {
   max-width: 960px;
   margin: 0 auto;
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .page-header {
@@ -48,8 +47,7 @@ body {
   color: #166534;
 }
 
-.alert-danger,
-.alert-error {
+.alert-danger {
   background-color: #fef2f2;
   border-color: #fca5a5;
   color: #991b1b;
@@ -72,7 +70,6 @@ body {
   border: 1px solid #d1d5db;
   border-radius: 4px;
   padding: 1.25rem;
-  background-color: #ffffff;
 }
 
 .card h2 {
@@ -92,11 +89,6 @@ body {
   font-size: 0.95rem;
 }
 
-.hint {
-  font-size: 0.85rem;
-  color: #4b5563;
-}
-
 .form-control {
   width: 100%;
   font: inherit;
@@ -105,8 +97,6 @@ body {
   padding: 0.5rem 0.65rem;
   border: 1px solid #6b7280;
   border-radius: 4px;
-  background-color: #ffffff;
-  color: #111827;
 }
 
 .form-control:focus-visible,
@@ -115,18 +105,8 @@ body {
   outline-offset: 2px;
 }
 
-.form-control:is(:user-invalid, .user-invalid-fallback) {
+.form-control:user-invalid {
   border-color: #b91c1c;
-}
-
-.error-msg {
-  display: none;
-  color: #b91c1c;
-  font-size: 0.875rem;
-}
-
-.form-control:is(:user-invalid, .user-invalid-fallback) + .error-msg {
-  display: block;
 }
 
 .btn {
@@ -140,11 +120,6 @@ body {
   background-color: #2563eb;
   color: #ffffff;
   cursor: pointer;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .table-wrapper {
@@ -168,7 +143,6 @@ body {
 
 .card thead th {
   background-color: #f9fafb;
-  font-weight: 600;
 }
 
 .badge {

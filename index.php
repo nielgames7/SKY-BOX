@@ -14,11 +14,7 @@ $casillas = [];
 $casillasLibres = [];
 $tarifas = [];
 $reservasActivas = [];
-$conteoEstados = [
-    'libre' => 0,
-    'ocupado' => 0,
-    'reservado' => 0,
-];
+$conteo = ['libre' => 0, 'ocupado' => 0, 'reservado' => 0];
 $errorBD = null;
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
@@ -27,15 +23,14 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
     try {
         $casillas = $pdo->query('SELECT id_casilla, piso, codigo, estado FROM casillas ORDER BY piso ASC, codigo ASC')->fetchAll();
         foreach ($casillas as $casilla) {
-            $estado = (string) ($casilla['estado'] ?? '');
-            if (isset($conteoEstados[$estado])) {
-                $conteoEstados[$estado]++;
+            $estado = (string) $casilla['estado'];
+            if (isset($conteo[$estado])) {
+                $conteo[$estado]++;
             }
             if ($estado === 'libre') {
                 $casillasLibres[] = $casilla;
             }
         }
-
         $tarifas = $pdo->query('SELECT id_tarifa, nombre, costo_por_hora FROM tarifas WHERE activa = 1 ORDER BY id_tarifa ASC')->fetchAll();
         $reservasActivas = $pdo->query("SELECT id_reserva, nombre_cliente, codigo_reserva FROM reservas WHERE estado = 'activa' ORDER BY fecha_hora_inicio ASC")->fetchAll();
     } catch (PDOException $e) {
@@ -56,21 +51,18 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
         <header class="page-header">
             <h1>SKY-BOX &mdash; Registro de Ingresos</h1>
             <p class="summary">
-                Casillas libres: <strong><?= $conteoEstados['libre'] ?></strong> |
-                Ocupadas: <strong><?= $conteoEstados['ocupado'] ?></strong> |
-                Reservadas: <strong><?= $conteoEstados['reservado'] ?></strong>
+                Casillas libres: <strong><?= $conteo['libre'] ?></strong> |
+                Ocupadas: <strong><?= $conteo['ocupado'] ?></strong> |
+                Reservadas: <strong><?= $conteo['reservado'] ?></strong>
             </p>
         </header>
 
         <?php if ($errorBD !== null) : ?>
-            <div class="alert alert-danger" role="alert">
-                <?= htmlspecialchars($errorBD, ENT_QUOTES, 'UTF-8') ?>
-            </div>
+            <div class="alert alert-danger" role="alert"><?= htmlspecialchars($errorBD, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
 
         <?php if (is_array($alerta) && !empty($alerta['mensaje'])) : ?>
-            <?php $tipoClase = ($alerta['tipo'] ?? '') === 'success' ? 'alert-success' : 'alert-danger'; ?>
-            <div class="alert <?= $tipoClase ?>" role="status" aria-live="polite">
+            <div class="alert <?= ($alerta['tipo'] ?? '') === 'success' ? 'alert-success' : 'alert-danger' ?>" role="status">
                 <span><?= htmlspecialchars((string) $alerta['mensaje'], ENT_QUOTES, 'UTF-8') ?></span>
                 <?php if (!empty($alerta['token_qr'])) : ?>
                     <strong> | Ticket: <?= htmlspecialchars((string) $alerta['token_qr'], ENT_QUOTES, 'UTF-8') ?></strong>
@@ -81,10 +73,9 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
         <div class="grid-main">
             <section class="card" aria-labelledby="titulo-registro">
                 <h2 id="titulo-registro">Registrar Ingreso</h2>
-                <form id="form-ingreso" action="controllers/registrar_ingreso.php" method="POST" aria-labelledby="titulo-registro">
+                <form action="controllers/registrar_ingreso.php" method="POST" aria-labelledby="titulo-registro">
                     <div class="form-group">
                         <label for="uid_rfid">Código Único de Tarjeta (UID RFID) *</label>
-                        <span id="uid-hint" class="hint">De 3 a 32 caracteres alfanuméricos (ej. RFID-001).</span>
                         <input
                             type="text"
                             id="uid_rfid"
@@ -98,14 +89,8 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
                             autocorrect="off"
                             autocapitalize="none"
                             spellcheck="false"
-                            enterkeyhint="next"
-                            aria-describedby="uid-hint"
-                            data-error="uid-error"
                             placeholder="Ej: RFID-001"
                         >
-                        <div id="uid-error" class="error-msg">
-                            Error: Ingrese un código de tarjeta válido (3 a 32 caracteres).
-                        </div>
                     </div>
 
                     <div class="form-group">
@@ -123,15 +108,11 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
                     <div class="form-group">
                         <label for="id_tarifa">Tarifa *</label>
                         <select id="id_tarifa" name="id_tarifa" class="form-control" required>
-                            <?php if (empty($tarifas)) : ?>
-                                <option value="1">Tarifa General Vehicular</option>
-                            <?php else : ?>
-                                <?php foreach ($tarifas as $tarifa) : ?>
-                                    <option value="<?= (int) $tarifa['id_tarifa'] ?>">
-                                        <?= htmlspecialchars((string) $tarifa['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= number_format((float) $tarifa['costo_por_hora'], 2) ?> Bs/h)
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                            <?php foreach ($tarifas as $tarifa) : ?>
+                                <option value="<?= (int) $tarifa['id_tarifa'] ?>">
+                                    <?= htmlspecialchars((string) $tarifa['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= number_format((float) $tarifa['costo_por_hora'], 2) ?> Bs/h)
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -149,7 +130,7 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
                         </div>
                     <?php endif; ?>
 
-                    <button type="submit" id="btn-submit" class="btn">Registrar Ingreso</button>
+                    <button type="submit" class="btn">Registrar Ingreso</button>
                 </form>
             </section>
 
@@ -186,37 +167,5 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
             <?php require_once __DIR__ . '/controllers/listar_ingresos.php'; ?>
         </div>
     </main>
-
-    <script>
-        const form = document.getElementById('form-ingreso');
-        const submitBtn = document.getElementById('btn-submit');
-
-        const linkError = (el, shown) => {
-            const errorId = el.dataset.error;
-            if (!errorId) return;
-            const ids = (el.getAttribute('aria-describedby') || '').split(/\s+/).filter((id) => id && id !== errorId);
-            if (shown) ids.push(errorId);
-            if (ids.length) el.setAttribute('aria-describedby', ids.join(' '));
-            else el.removeAttribute('aria-describedby');
-        };
-
-        const syncAria = (el) => {
-            if (!el.matches?.('input, select')) return;
-            const invalid = el.matches(':user-invalid');
-            el.setAttribute('aria-invalid', invalid ? 'true' : 'false');
-            linkError(el, invalid);
-        };
-
-        form.querySelectorAll('input, select').forEach((el) => el.setAttribute('aria-invalid', 'false'));
-        form.addEventListener('blur', (e) => syncAria(e.target), true);
-        form.addEventListener('input', (e) => syncAria(e.target));
-        form.addEventListener('invalid', (e) => syncAria(e.target), true);
-        form.addEventListener('submit', () => {
-            if (form.checkValidity()) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Registrando...';
-            }
-        });
-    </script>
 </body>
 </html>
