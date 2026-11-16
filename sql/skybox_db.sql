@@ -136,16 +136,18 @@ INSERT INTO usuarios (nombre, usuario, password, rol) VALUES
 INSERT INTO tarifas (nombre, costo_por_hora, costo_fraccion, minutos_tolerancia, activa) VALUES
 ('Tarifa General Vehicular', 5.00, 3.00, 15, 1);
 
--- 4 casillas de ejemplo distribuidas en 2 niveles (con pines del ESP32)
+-- 6 casillas de ejemplo distribuidas en 2 niveles (con pines del ESP32)
 INSERT INTO casillas (piso, codigo, estado, pin_sensor) VALUES
 (1, 'PB-01', 'libre', 'GPIO_4'),
 (1, 'PB-02', 'libre', 'GPIO_5'),
+(1, 'PB-03', 'libre', 'GPIO_16'),
 (2, 'P2-01', 'libre', 'GPIO_18'),
-(2, 'P2-02', 'libre', 'GPIO_19');
+(2, 'P2-02', 'libre', 'GPIO_19'),
+(2, 'P2-03', 'libre', 'GPIO_21');
 
 -- Reserva de prueba
 INSERT INTO reservas (id_casilla, nombre_cliente, telefono, placa_vehiculo, codigo_reserva, fecha_hora_inicio, fecha_hora_fin, estado) VALUES
-(3, 'Juan Pérez', '71234567', '3421-ABC', 'RES-4589', NOW(), DATE_ADD(NOW(), INTERVAL 2 HOUR), 'activa');
+(4, 'Juan Pérez', '71234567', '3421-ABC', 'RES-4589', NOW(), DATE_ADD(NOW(), INTERVAL 2 HOUR), 'activa');
 
--- Ponemos la casilla 3 en estado reservado
-UPDATE casillas SET estado = 'reservado' WHERE id_casilla = 3;
+-- Ponemos la casilla 4 (P2-01) en estado reservado
+UPDATE casillas SET estado = 'reservado' WHERE id_casilla = 4;
