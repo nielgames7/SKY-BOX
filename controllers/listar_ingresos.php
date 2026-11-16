@@ -40,38 +40,42 @@ if (isset($pdo) && $pdo instanceof PDO) {
     }
 }
 ?>
-<section class="card" aria-labelledby="titulo-ingresos-activos">
-    <h2 id="titulo-ingresos-activos">Vehículos en Parqueo (En Curso)</h2>
-    <?php if ($errorListado !== null) : ?>
-        <p class="alert alert-danger"><?= htmlspecialchars($errorListado, ENT_QUOTES, 'UTF-8') ?></p>
-    <?php elseif (empty($ingresosActivos)) : ?>
-        <p class="empty">No hay vehículos registrados actualmente en el parqueo.</p>
-    <?php else : ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>Token / Ticket</th>
-                    <th>UID RFID</th>
-                    <th>Placa</th>
-                    <th>Casilla</th>
-                    <th>Tarifa</th>
-                    <th>Hora de Entrada</th>
-                    <th>Tiempo Transcurrido</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($ingresosActivos as $fila) : ?>
-                    <tr>
-                        <td><span class="badge"><?= htmlspecialchars((string) $fila['token_qr'], ENT_QUOTES, 'UTF-8') ?></span></td>
-                        <td><code><?= htmlspecialchars((string) $fila['uid_rfid'], ENT_QUOTES, 'UTF-8') ?></code></td>
-                        <td><?= htmlspecialchars((string) $fila['placa'], ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars((string) $fila['casilla'], ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars((string) $fila['tarifa'], ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $fila['fecha_ingreso'])), ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><?= htmlspecialchars(calcularTiempoTranscurrido((string) $fila['fecha_ingreso']), ENT_QUOTES, 'UTF-8') ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
+<section class="card shadow-sm h-100" aria-labelledby="titulo-ingresos-activos">
+    <div class="card-body">
+        <h2 id="titulo-ingresos-activos" class="h5 card-title mb-3">Vehículos en Parqueo (En Curso)</h2>
+        <?php if ($errorListado !== null) : ?>
+            <div class="alert alert-danger mb-0"><?= htmlspecialchars($errorListado, ENT_QUOTES, 'UTF-8') ?></div>
+        <?php elseif (empty($ingresosActivos)) : ?>
+            <p class="text-body-secondary mb-0">No hay vehículos registrados actualmente en el parqueo.</p>
+        <?php else : ?>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ticket</th>
+                            <th>UID RFID</th>
+                            <th>Placa</th>
+                            <th>Casilla</th>
+                            <th class="d-none d-md-table-cell">Tarifa</th>
+                            <th>Entrada</th>
+                            <th>Tiempo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($ingresosActivos as $fila) : ?>
+                            <tr>
+                                <td><span class="badge text-bg-secondary font-monospace"><?= htmlspecialchars((string) $fila['token_qr'], ENT_QUOTES, 'UTF-8') ?></span></td>
+                                <td><code><?= htmlspecialchars((string) $fila['uid_rfid'], ENT_QUOTES, 'UTF-8') ?></code></td>
+                                <td><?= htmlspecialchars((string) $fila['placa'], ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars((string) $fila['casilla'], ENT_QUOTES, 'UTF-8') ?></td>
+                                <td class="d-none d-md-table-cell"><?= htmlspecialchars((string) $fila['tarifa'], ENT_QUOTES, 'UTF-8') ?></td>
+                                <td class="text-nowrap"><?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $fila['fecha_ingreso'])), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td class="text-nowrap"><?= htmlspecialchars(calcularTiempoTranscurrido((string) $fila['fecha_ingreso']), ENT_QUOTES, 'UTF-8') ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
 </section>
