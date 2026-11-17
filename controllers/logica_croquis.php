@@ -39,6 +39,10 @@ function volverCroquis($tipo, $mensaje)
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    if (($_SESSION['rol'] ?? '') === 'usuario') {
+        volverCroquis('danger', 'Solo lectura: el rol usuario no puede modificar el croquis.');
+    }
+
     if (!$pdo) {
         volverCroquis('danger', 'No hay conexión con la base de datos.');
     }

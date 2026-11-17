@@ -26,9 +26,10 @@ SET FOREIGN_KEY_CHECKS = 1;
 CREATE TABLE usuarios (
     id_usuario INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(120) NULL UNIQUE,
     usuario VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,                     -- Hash generado con password_hash() en PHP
-    rol ENUM('admin', 'operador') NOT NULL DEFAULT 'operador',
+    rol ENUM('admin', 'operador', 'usuario') NOT NULL DEFAULT 'usuario',
     activo TINYINT(1) NOT NULL DEFAULT 1,
     creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -63,6 +64,7 @@ CREATE TABLE casillas (
 -- =====================================================================
 CREATE TABLE reservas (
     id_reserva INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT UNSIGNED NULL,
     id_casilla INT UNSIGNED NOT NULL,
     nombre_cliente VARCHAR(100) NOT NULL,
     telefono VARCHAR(20) NULL,
@@ -70,8 +72,15 @@ CREATE TABLE reservas (
     codigo_reserva VARCHAR(20) NOT NULL UNIQUE,         -- PIN o código generado para el conductor
     fecha_hora_inicio DATETIME NOT NULL,
     fecha_hora_fin DATETIME NOT NULL,
+    monto_total DECIMAL(8,2) NOT NULL DEFAULT 0.00,
+    pagado TINYINT(1) NOT NULL DEFAULT 0,
     estado ENUM('pendiente', 'activa', 'completada', 'cancelada') NOT NULL DEFAULT 'pendiente',
     creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reserva_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuarios(id_usuario)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL,
     CONSTRAINT fk_reserva_casilla 
         FOREIGN KEY (id_casilla) 
         REFERENCES casillas(id_casilla) 
@@ -136,18 +145,72 @@ INSERT INTO usuarios (nombre, usuario, password, rol) VALUES
 INSERT INTO tarifas (nombre, costo_por_hora, costo_fraccion, minutos_tolerancia, activa) VALUES
 ('Tarifa General Vehicular', 5.00, 3.00, 15, 1);
 
--- 6 casillas de ejemplo distribuidas en 2 niveles (con pines del ESP32)
+-- 60 casillas distribuidas en 10 pisos (6 puestos por piso, con pines del ESP32)
 INSERT INTO casillas (piso, codigo, estado, pin_sensor) VALUES
-(1, 'PB-01', 'libre', 'GPIO_4'),
-(1, 'PB-02', 'libre', 'GPIO_5'),
-(1, 'PB-03', 'libre', 'GPIO_16'),
-(2, 'P2-01', 'libre', 'GPIO_18'),
-(2, 'P2-02', 'libre', 'GPIO_19'),
-(2, 'P2-03', 'libre', 'GPIO_21');
+(1, 'P01-01', 'libre', 'GPIO_4'),
+(1, 'P01-02', 'libre', 'GPIO_5'),
+(1, 'P01-03', 'libre', 'GPIO_16'),
+(1, 'P01-04', 'libre', 'GPIO_17'),
+(1, 'P01-05', 'libre', 'GPIO_18'),
+(1, 'P01-06', 'libre', 'GPIO_19'),
+(2, 'P02-01', 'libre', 'GPIO_4'),
+(2, 'P02-02', 'libre', 'GPIO_5'),
+(2, 'P02-03', 'libre', 'GPIO_16'),
+(2, 'P02-04', 'libre', 'GPIO_17'),
+(2, 'P02-05', 'libre', 'GPIO_18'),
+(2, 'P02-06', 'libre', 'GPIO_19'),
+(3, 'P03-01', 'libre', 'GPIO_4'),
+(3, 'P03-02', 'libre', 'GPIO_5'),
+(3, 'P03-03', 'libre', 'GPIO_16'),
+(3, 'P03-04', 'libre', 'GPIO_17'),
+(3, 'P03-05', 'libre', 'GPIO_18'),
+(3, 'P03-06', 'libre', 'GPIO_19'),
+(4, 'P04-01', 'libre', 'GPIO_4'),
+(4, 'P04-02', 'libre', 'GPIO_5'),
+(4, 'P04-03', 'libre', 'GPIO_16'),
+(4, 'P04-04', 'libre', 'GPIO_17'),
+(4, 'P04-05', 'libre', 'GPIO_18'),
+(4, 'P04-06', 'libre', 'GPIO_19'),
+(5, 'P05-01', 'libre', 'GPIO_4'),
+(5, 'P05-02', 'libre', 'GPIO_5'),
+(5, 'P05-03', 'libre', 'GPIO_16'),
+(5, 'P05-04', 'libre', 'GPIO_17'),
+(5, 'P05-05', 'libre', 'GPIO_18'),
+(5, 'P05-06', 'libre', 'GPIO_19'),
+(6, 'P06-01', 'libre', 'GPIO_4'),
+(6, 'P06-02', 'libre', 'GPIO_5'),
+(6, 'P06-03', 'libre', 'GPIO_16'),
+(6, 'P06-04', 'libre', 'GPIO_17'),
+(6, 'P06-05', 'libre', 'GPIO_18'),
+(6, 'P06-06', 'libre', 'GPIO_19'),
+(7, 'P07-01', 'libre', 'GPIO_4'),
+(7, 'P07-02', 'libre', 'GPIO_5'),
+(7, 'P07-03', 'libre', 'GPIO_16'),
+(7, 'P07-04', 'libre', 'GPIO_17'),
+(7, 'P07-05', 'libre', 'GPIO_18'),
+(7, 'P07-06', 'libre', 'GPIO_19'),
+(8, 'P08-01', 'libre', 'GPIO_4'),
+(8, 'P08-02', 'libre', 'GPIO_5'),
+(8, 'P08-03', 'libre', 'GPIO_16'),
+(8, 'P08-04', 'libre', 'GPIO_17'),
+(8, 'P08-05', 'libre', 'GPIO_18'),
+(8, 'P08-06', 'libre', 'GPIO_19'),
+(9, 'P09-01', 'libre', 'GPIO_4'),
+(9, 'P09-02', 'libre', 'GPIO_5'),
+(9, 'P09-03', 'libre', 'GPIO_16'),
+(9, 'P09-04', 'libre', 'GPIO_17'),
+(9, 'P09-05', 'libre', 'GPIO_18'),
+(9, 'P09-06', 'libre', 'GPIO_19'),
+(10, 'P10-01', 'libre', 'GPIO_4'),
+(10, 'P10-02', 'libre', 'GPIO_5'),
+(10, 'P10-03', 'libre', 'GPIO_16'),
+(10, 'P10-04', 'libre', 'GPIO_17'),
+(10, 'P10-05', 'libre', 'GPIO_18'),
+(10, 'P10-06', 'libre', 'GPIO_19');
 
--- Reserva de prueba
+-- Reserva de prueba en Piso 2 (P02-01, id_casilla = 7)
 INSERT INTO reservas (id_casilla, nombre_cliente, telefono, placa_vehiculo, codigo_reserva, fecha_hora_inicio, fecha_hora_fin, estado) VALUES
-(4, 'Juan Pérez', '71234567', '3421-ABC', 'RES-4589', NOW(), DATE_ADD(NOW(), INTERVAL 2 HOUR), 'activa');
+(7, 'Juan Pérez', '71234567', '3421-ABC', 'RES-4589', NOW(), DATE_ADD(NOW(), INTERVAL 2 HOUR), 'activa');
 
--- Ponemos la casilla 4 (P2-01) en estado reservado
-UPDATE casillas SET estado = 'reservado' WHERE id_casilla = 4;
+-- Ponemos la casilla 7 (P02-01) en estado reservado
+UPDATE casillas SET estado = 'reservado' WHERE id_casilla = 7;
