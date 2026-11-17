@@ -137,9 +137,10 @@ CREATE TABLE registros (
 -- =====================================================================
 
 -- Usuarios del sistema (contraseña de prueba verificada: 'admin123')
-INSERT INTO usuarios (nombre, usuario, password, rol) VALUES
-('Carlos Méndez Rojas', 'admin', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'admin'),
-('Operador Portería', 'operador', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'operador');
+INSERT INTO usuarios (nombre, correo, usuario, password, rol) VALUES
+('Carlos Méndez Rojas', 'admin@skybox.test', 'admin', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'admin'),
+('Operador Portería', 'operador@skybox.test', 'operador', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'operador'),
+('Luis Vega (Demo Usuario)', 'cliente1@skybox.test', 'cliente1', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'usuario');
 
 -- Tarifa estándar
 INSERT INTO tarifas (nombre, costo_por_hora, costo_fraccion, minutos_tolerancia, activa) VALUES

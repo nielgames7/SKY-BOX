@@ -39,8 +39,8 @@ function volverCroquis($tipo, $mensaje)
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    if (($_SESSION['rol'] ?? '') === 'usuario') {
-        volverCroquis('danger', 'Solo lectura: el rol usuario no puede modificar el croquis.');
+    if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
+        volverCroquis('danger', 'Acceso limitado: inicia sesión como administrador para modificar el croquis.');
     }
 
     if (!$pdo) {

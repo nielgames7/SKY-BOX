@@ -163,8 +163,8 @@ function procesarSalida($pdo, $entrada)
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    if (($_SESSION['rol'] ?? '') === 'usuario') {
-        responderSalida('danger', 'Solo lectura: el rol usuario no puede registrar salidas.');
+    if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
+        responderSalida('danger', 'Solo un administrador u operador puede registrar salidas y cobros.');
     }
 
     if (!isset($pdo) || !($pdo instanceof PDO)) {

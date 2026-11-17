@@ -22,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirigir('danger', 'Método no permitido.');
 }
 
+if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
+    redirigir('danger', 'Solo un administrador u operador puede registrar ingresos.');
+}
+
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     redirigir('danger', 'No hay conexión con la base de datos.');
 }

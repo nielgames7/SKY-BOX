@@ -26,7 +26,7 @@ $errorListado = null;
 if (isset($pdo) && $pdo instanceof PDO) {
     try {
         $ingresosActivos = $pdo->query(
-            "SELECT r.token_qr, r.uid_rfid, COALESCE(res.placa_vehiculo, 'Sin reserva') AS placa,
+            "SELECT r.id_registro, r.token_qr, r.uid_rfid, COALESCE(res.placa_vehiculo, 'Sin reserva') AS placa,
                     COALESCE(c.codigo, 'Sin asignar') AS casilla, t.nombre AS tarifa, r.fecha_ingreso
              FROM registros r
              LEFT JOIN casillas c ON c.id_casilla = r.id_casilla
@@ -40,9 +40,13 @@ if (isset($pdo) && $pdo instanceof PDO) {
     }
 }
 ?>
-<section class="card shadow-sm h-100" aria-labelledby="titulo-ingresos-activos">
+<section class="card border-0 shadow-sm h-100" aria-labelledby="titulo-ingresos-activos">
     <div class="card-body">
-        <h2 id="titulo-ingresos-activos" class="h5 card-title mb-3">Vehículos en Parqueo (En Curso)</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 id="titulo-ingresos-activos" class="h5 mb-0">Vehículos en Parqueo (En Curso)</h2>
+            <span class="badge text-bg-danger"><?= count($ingresosActivos) ?> activos</span>
+        </div>
+
         <?php if ($errorListado !== null) : ?>
             <div class="alert alert-danger mb-0"><?= htmlspecialchars($errorListado, ENT_QUOTES, 'UTF-8') ?></div>
         <?php elseif (empty($ingresosActivos)) : ?>
@@ -55,10 +59,11 @@ if (isset($pdo) && $pdo instanceof PDO) {
                             <th>Ticket</th>
                             <th>UID RFID</th>
                             <th>Placa</th>
-                            <th>Casilla</th>
+                            <th>Puesto</th>
                             <th class="d-none d-md-table-cell">Tarifa</th>
                             <th>Entrada</th>
                             <th>Tiempo</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,6 +76,13 @@ if (isset($pdo) && $pdo instanceof PDO) {
                                 <td class="d-none d-md-table-cell"><?= htmlspecialchars((string) $fila['tarifa'], ENT_QUOTES, 'UTF-8') ?></td>
                                 <td class="text-nowrap"><?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $fila['fecha_ingreso'])), ENT_QUOTES, 'UTF-8') ?></td>
                                 <td class="text-nowrap"><?= htmlspecialchars(calcularTiempoTranscurrido((string) $fila['fecha_ingreso']), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td class="text-nowrap">
+                                    <form action="controllers/registrar_salida.php" method="POST" class="d-inline-flex gap-1">
+                                        <input type="hidden" name="id_registro" value="<?= (int) $fila['id_registro'] ?>">
+                                        <button type="submit" name="metodo_pago" value="qr_transferencia" class="btn btn-sm btn-primary">Cobrar QR</button>
+                                        <button type="submit" name="metodo_pago" value="efectivo" class="btn btn-sm btn-outline-secondary">Efectivo</button>
+                                    </form>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

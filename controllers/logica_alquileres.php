@@ -153,8 +153,8 @@ if ($accion === 'alquilar') {
 }
 
 if ($accion === 'cancelar') {
-    if (($_SESSION['rol'] ?? '') === 'usuario') {
-        volverAlquileres('danger', 'El rol usuario no puede modificar ni cancelar puestos.');
+    if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
+        volverAlquileres('danger', 'Solo un administrador puede cancelar o liberar alquileres.');
     }
     $idReserva = isset($_POST['id_reserva']) ? (int) $_POST['id_reserva'] : 0;
     $stmt = $pdo->prepare("SELECT id_casilla, codigo_reserva FROM reservas WHERE id_reserva = ? AND estado = 'activa' LIMIT 1");
