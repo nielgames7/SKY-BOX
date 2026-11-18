@@ -48,7 +48,10 @@ function renderPuesto(array $casilla, int $numero, string $orientacion, bool $es
         return;
     }
 
-    echo '<div class="' . $clases . '" title="' . h($codigo) . ': ' . ($etiquetas[$estado] ?? h($estado)) . '">' . $contenido . '</div>';
+    $attrs = $estado === 'libre'
+        ? ' data-pick-casilla="' . (int) $casilla['id_casilla'] . '" data-pick-piso="' . (int) $casilla['piso'] . '"'
+        : '';
+    echo '<div class="' . $clases . '"' . $attrs . ' title="' . h($codigo) . ': ' . ($etiquetas[$estado] ?? h($estado)) . '">' . $contenido . '</div>';
 }
 
 $alerta = $_SESSION['alerta'] ?? null;
@@ -110,7 +113,9 @@ if (!isset($pdo) || !($pdo instanceof PDO)) {
             $recaudoAlq = (float) $pdo->query("SELECT COALESCE(SUM(monto_total), 0) FROM reservas WHERE pagado = 1")->fetchColumn();
             $totalRecaudado = $recaudoReg + $recaudoAlq;
 
-            $usuariosLista = $pdo->query('SELECT id_usuario, nombre, correo, usuario, rol, creado_en FROM usuarios ORDER BY id_usuario DESC')->fetchAll();
+            $usuariosLista = ($rolActual === 'admin')
+                ? $pdo->query('SELECT id_usuario, nombre, correo, usuario, rol, activo, creado_en FROM usuarios ORDER BY id_usuario DESC')->fetchAll()
+                : [];
         } elseif ($idUsuarioActual > 0) {
             $alquileresVisibles = obtenerAlquileres($pdo, $idUsuarioActual);
         }
@@ -129,35 +134,59 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <script>
+    (() => {
+        try {
+            const s = localStorage.getItem('color-scheme') || 'light dark';
+            document.querySelector('meta[name="color-scheme"]').content = s;
+            const d = s === 'dark' || (s === 'light dark' && matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.dataset.bsTheme = d ? 'dark' : 'light';
+        } catch (_) {}
+    })();
+    </script>
     <title>SKY-BOX | Estacionamiento Inteligente</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-    <header class="topbar-skybox text-white py-2">
-        <div class="container-fluid px-3 px-lg-4 d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div>
-                <span class="fw-bold fs-5">SKY-BOX</span>
-                <span class="text-white-50 small ms-2">10 Pisos &middot; <?= $totalCasillas ?> Puestos</span>
-            </div>
+    <header class="topbar-skybox sticky-top">
+        <div class="container-xxl px-3 px-lg-4 py-2 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <a href="index.php" class="text-decoration-none d-flex align-items-center gap-2 brand-skybox">
+                <span class="fw-black fs-4 tracking-tight">SKY-BOX</span>
+            </a>
+
+            <nav class="d-none d-md-flex align-items-center gap-4 small fw-semibold" aria-label="Navegación principal">
+                <a href="#seccion-disponibilidad" class="nav-link-sb">Disponibilidad</a>
+                <a href="#seccion-alquiler" class="nav-link-sb">Mis Alquileres</a>
+                <?php if ($esAdmin) : ?>
+                    <a href="#seccion-operacion" class="nav-link-sb">Operación</a>
+                    <a href="pantalla_salida.php" target="_blank" rel="noopener" class="nav-link-sb">Pantalla Exterior</a>
+                <?php endif; ?>
+            </nav>
 
             <div class="d-flex flex-wrap align-items-center gap-2">
+                <button type="button" id="btn-theme-toggle" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 theme-btn" aria-label="Cambiar tema claro u oscuro">
+                    <span class="theme-ico-dark" aria-hidden="true">&#9790;</span>
+                    <span class="theme-ico-light" aria-hidden="true">&#9728;</span>
+                    <span class="visually-hidden">Alternar modo oscuro</span>
+                </button>
                 <?php if ($esAdmin) : ?>
-                    <span class="badge text-bg-primary">Admin: <?= h($nombreUsuarioActual) ?></span>
-                    <a href="controllers/auth.php?accion=logout" class="btn btn-sm btn-outline-light">Cerrar Sesión</a>
+                    <span class="badge rounded-pill text-bg-primary">Admin: <?= h($nombreUsuarioActual) ?></span>
+                    <a href="controllers/auth.php?accion=logout" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Cerrar Sesión</a>
                 <?php elseif ($idUsuarioActual > 0) : ?>
-                    <span class="badge text-bg-success">Usuario: <?= h($nombreUsuarioActual) ?> (Limitado)</span>
-                    <a href="controllers/auth.php?accion=logout" class="btn btn-sm btn-outline-light">Cerrar Sesión</a>
+                    <span class="badge rounded-pill text-bg-success">Usuario: <?= h($nombreUsuarioActual) ?></span>
+                    <a href="controllers/auth.php?accion=logout" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Cerrar Sesión</a>
                 <?php else : ?>
-                    <span class="badge text-bg-secondary">Modo Usuario (Solo Lectura)</span>
-                    <button type="button" class="btn btn-sm btn-outline-light" data-open-auth="login">Iniciar Sesión</button>
-                    <button type="button" class="btn btn-sm btn-primary" data-open-auth="register">Registrarse</button>
+                    <span class="badge rounded-pill text-bg-secondary d-none d-sm-inline-block">Solo Lectura</span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-open-auth="login">Iniciar Sesión</button>
+                    <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" data-open-auth="register">Registrarse</button>
                 <?php endif; ?>
             </div>
         </div>
     </header>
 
-    <main class="container-fluid px-3 px-lg-4 py-3 py-lg-4">
+    <main class="container-xxl px-3 px-lg-4 py-3 py-lg-4">
         <?php if ($errorBD !== null) : ?>
             <div class="alert alert-danger" role="alert"><?= h($errorBD) ?></div>
         <?php endif; ?>
@@ -172,129 +201,155 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
             </div>
         <?php endif; ?>
 
-        <?php if ($esAdmin && !empty($alerta['salida']['qr_simulado']['qr_texto'])) : ?>
-            <?php $sal = $alerta['salida']; ?>
-            <section class="qr-card-sim mb-3 shadow-sm" aria-label="Comprobante QR de salida">
-                <div id="qr-salida-svg" data-qr-texto="<?= h((string) $sal['qr_simulado']['qr_texto']) ?>"></div>
-                <div>
-                    <h2 class="h6 mb-1">Comprobante de Pago QR Simulado</h2>
-                    <div class="small text-body-secondary">Referencia: <code class="text-dark"><?= h((string) $sal['qr_simulado']['referencia']) ?></code></div>
-                    <div class="small">Ticket: <strong><?= h((string) $sal['token_qr']) ?></strong> &middot; RFID: <code><?= h((string) $sal['uid_rfid']) ?></code> &middot; Puesto: <strong><?= h((string) ($sal['casilla'] ?? '-')) ?></strong></div>
-                    <div class="fs-5 fw-bold text-primary mt-1">Total Cobrado: <?= number_format((float) $sal['total_pagado'], 2) ?> Bs (<?= h((string) $sal['tiempo']) ?>)</div>
-                </div>
-            </section>
-        <?php endif; ?>
+        <!-- Barra flotante estilo Movilidad (Piso · Entrada · Salida · Acción) -->
+        <section class="pill-searchbar mx-auto mb-4" aria-label="Filtro rápido de disponibilidad">
+            <div class="pill-seg">
+                <label for="pill-piso" class="pill-lbl">Nivel</label>
+                <select id="pill-piso" class="pill-ctrl">
+                    <?php for ($p = 1; $p <= 10; $p++) : ?>
+                        <option value="<?= $p ?>">Piso <?= $p ?></option>
+                    <?php endfor; ?>
+                    <option value="todos">Todos los Pisos</option>
+                </select>
+            </div>
+            <div class="pill-seg">
+                <label for="pill-inicio" class="pill-lbl">Entrada</label>
+                <input type="datetime-local" id="pill-inicio" class="pill-ctrl" value="<?= h($ahoraLocal) ?>">
+            </div>
+            <div class="pill-seg">
+                <label for="pill-fin" class="pill-lbl">Salida</label>
+                <input type="datetime-local" id="pill-fin" class="pill-ctrl" value="<?= h($dosHorasLocal) ?>">
+            </div>
+            <a href="#seccion-alquiler" class="btn pill-cta">Buscar Espacio</a>
+        </section>
 
-        <section class="row g-3 mb-4" aria-label="Indicadores generales">
-            <div class="col-6 col-md-<?= $esAdmin ? '3' : '4' ?>">
-                <div class="card border-0 shadow-sm resumen-item resumen-libre h-100">
-                    <div class="card-body py-2 py-md-3">
-                        <div class="small text-body-secondary fw-semibold">Disponibles</div>
-                        <div class="fs-3 fw-bold text-success"><?= $conteo['libre'] ?> / <?= $totalCasillas ?></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-<?= $esAdmin ? '3' : '4' ?>">
-                <div class="card border-0 shadow-sm resumen-item resumen-ocupado h-100">
-                    <div class="card-body py-2 py-md-3">
-                        <div class="small text-body-secondary fw-semibold">Ocupados</div>
-                        <div class="fs-3 fw-bold text-danger"><?= $conteo['ocupado'] ?></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-<?= $esAdmin ? '6' : '12' ?> col-md-<?= $esAdmin ? '3' : '4' ?>">
-                <div class="card border-0 shadow-sm resumen-item resumen-reservado h-100">
-                    <div class="card-body py-2 py-md-3">
-                        <div class="small text-body-secondary fw-semibold">Alquiler / Reserva</div>
-                        <div class="fs-3 fw-bold text-warning-emphasis"><?= $conteo['reservado'] ?></div>
-                    </div>
-                </div>
-            </div>
-            <?php if ($esAdmin) : ?>
-                <div class="col-6 col-md-3">
-                    <div class="card border-0 shadow-sm resumen-item resumen-recaudado h-100">
-                        <div class="card-body py-2 py-md-3">
-                            <div class="small text-body-secondary fw-semibold">Recaudado Total</div>
-                            <div class="fs-3 fw-bold text-primary"><?= number_format($totalRecaudado, 2) ?> Bs</div>
+        <?php
+        $pctOcup = $totalCasillas > 0 ? (($totalCasillas - $conteo['libre']) / $totalCasillas) : 0;
+        $circ = 282.7;
+        $dashOff = number_format($circ * $pctOcup, 1, '.', '');
+        ?>
+
+        <!-- Split Principal: Croquis Arquitectónico (Izquierda) + Resumen Tarifa & Anillo (Derecha) -->
+        <section id="seccion-disponibilidad" class="row g-3 g-lg-4 mb-4 align-items-stretch" aria-labelledby="titulo-croquis">
+            <div class="col-12 col-lg-8">
+                <div class="sb-panel h-100 p-3 p-md-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div>
+                            <h1 id="titulo-croquis" class="h5 fw-bold mb-0">Plano del Estacionamiento</h1>
+                            <p class="small text-body-secondary mb-0">
+                                <?= $esAdmin
+                                    ? 'Modo Admin: clic en un puesto para cambiar libre/ocupado.'
+                                    : 'Vista en tiempo real: selecciona un piso o toca un espacio libre.' ?>
+                            </p>
                         </div>
+                        <ul class="list-inline mb-0 small leyenda" aria-label="Leyenda">
+                            <li class="list-inline-item"><span class="punto punto-libre"></span>Libre</li>
+                            <li class="list-inline-item"><span class="punto punto-ocupado"></span>Ocupado</li>
+                            <li class="list-inline-item"><span class="punto punto-reservado"></span>Reservado</li>
+                        </ul>
+                    </div>
+
+                    <div class="floor-pills mb-3" role="group" aria-label="Seleccionar piso">
+                        <?php foreach ($datosCroquis['pisos'] as $numPiso => $lista) : ?>
+                            <?php $libresPiso = count(array_filter($lista, static fn($c) => $c['estado'] === 'libre')); ?>
+                            <button type="button" class="floor-pill" data-piso="<?= (int) $numPiso ?>" aria-pressed="<?= $numPiso === 1 ? 'true' : 'false' ?>">
+                                P<?= (int) $numPiso ?> (<?= $libresPiso ?>/6)
+                            </button>
+                        <?php endforeach; ?>
+                        <button type="button" class="floor-pill" data-piso="todos" aria-pressed="false">Todos</button>
+                    </div>
+
+                    <div class="pisos-lista">
+                        <?php foreach ($datosCroquis['pisos'] as $numPiso => $lista) : ?>
+                            <?php
+                            $libresPiso = count(array_filter($lista, static fn($c) => $c['estado'] === 'libre'));
+                            $filaSuperior = array_slice($lista, 0, 3);
+                            $filaInferior = array_slice($lista, 3, 3);
+                            ?>
+                            <article class="piso-card" data-piso="<?= (int) $numPiso ?>" <?= $numPiso !== 1 ? 'hidden' : '' ?>>
+                                <div class="piso-titulo">
+                                    <strong><?= $numPiso === 1 ? 'Piso 1 (Planta Baja)' : 'Piso ' . (int) $numPiso ?></strong>
+                                    <span class="badge rounded-pill <?= $libresPiso > 0 ? 'text-bg-success' : 'text-bg-danger' ?>"><?= $libresPiso ?>/6 libres</span>
+                                </div>
+
+                                <div class="parqueo" role="region" aria-label="Croquis de 6 puestos con carril central del Piso <?= (int) $numPiso ?>">
+                                    <div class="fila fila-a">
+                                        <?php foreach ($filaSuperior as $i => $cas) : ?>
+                                            <?php
+                                            $idCas = (int) $cas['id_casilla'];
+                                            renderPuesto($cas, $i + 1, 'arriba', $esAdmin, $ocupantesPorCasilla[$idCas] ?? null, $reservasPorCasilla[$idCas] ?? null);
+                                            ?>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <div class="carril">
+                                        <span class="acceso">ENTRADA &rarr;</span>
+                                        <span class="carril-linea" aria-hidden="true"></span>
+                                        <span class="acceso">&rarr; SALIDA</span>
+                                    </div>
+
+                                    <div class="fila fila-b">
+                                        <?php foreach ($filaInferior as $i => $cas) : ?>
+                                            <?php
+                                            $idCas = (int) $cas['id_casilla'];
+                                            renderPuesto($cas, $i + 4, 'abajo', $esAdmin, $ocupantesPorCasilla[$idCas] ?? null, $reservasPorCasilla[$idCas] ?? null);
+                                            ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
                     </div>
                 </div>
-            <?php endif; ?>
-        </section>
+            </div>
 
-        <section class="card border-0 shadow-sm mb-4" aria-labelledby="titulo-croquis">
-            <div class="card-body">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div class="col-12 col-lg-4">
+                <aside class="sb-panel h-100 p-4 d-flex flex-column justify-content-between text-center" aria-label="Tarifa y disponibilidad">
                     <div>
-                        <h1 id="titulo-croquis" class="h5 mb-1">Croquis del Estacionamiento (10 Pisos &middot; 6 Puestos por Piso)</h1>
-                        <p class="small text-body-secondary mb-0">
-                            <?= $esAdmin
-                                ? 'Modo Administrador: haz clic en cualquier puesto del plano para cambiar libre/ocupado.'
-                                : 'Vista en tiempo real (solo lectura): selecciona un piso para ver los puestos disponibles.' ?>
-                        </p>
+                        <div class="small text-body-secondary fw-semibold">Tarifa</div>
+                        <div class="display-6 fw-black mb-3"><?= number_format($precioHoraBase, 2) ?> Bs/h</div>
+                        <hr class="opacity-25 my-3">
+                        <div class="small text-body-secondary fw-semibold mb-2">Disponibilidad</div>
+
+                        <div class="ring-wrap mx-auto my-2">
+                            <svg viewBox="0 0 110 110" class="ring-svg" aria-hidden="true">
+                                <circle cx="55" cy="55" r="45" class="ring-track"></circle>
+                                <circle cx="55" cy="55" r="45" class="ring-fill" stroke-dasharray="<?= $circ ?>" stroke-dashoffset="<?= $dashOff ?>" transform="rotate(-90 55 55)"></circle>
+                            </svg>
+                            <div class="ring-center">
+                                <span class="fs-2 fw-black lh-1"><?= $conteo['libre'] ?></span>
+                                <span class="small text-body-secondary">libres de <?= $totalCasillas ?></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-3 small mt-3">
+                            <span><strong class="text-danger"><?= $conteo['ocupado'] ?></strong> Ocupados</span>
+                            <span><strong class="text-warning-emphasis"><?= $conteo['reservado'] ?></strong> Reservas</span>
+                        </div>
+
+                        <?php if ($esAdmin) : ?>
+                            <div class="mt-3 p-2 rounded-3 bg-body-tertiary border">
+                                <div class="small text-body-secondary">Recaudado Total</div>
+                                <div class="fs-5 fw-bold text-primary"><?= number_format($totalRecaudado, 2) ?> Bs</div>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <ul class="list-inline mb-0 small leyenda" aria-label="Leyenda">
-                        <li class="list-inline-item"><span class="punto punto-libre"></span>Libre</li>
-                        <li class="list-inline-item"><span class="punto punto-ocupado"></span>Ocupado</li>
-                        <li class="list-inline-item"><span class="punto punto-reservado"></span>Reservado</li>
-                    </ul>
-                </div>
 
-                <div class="floor-pills mb-3" role="group" aria-label="Seleccionar piso">
-                    <?php foreach ($datosCroquis['pisos'] as $numPiso => $lista) : ?>
-                        <?php $libresPiso = count(array_filter($lista, static fn($c) => $c['estado'] === 'libre')); ?>
-                        <button type="button" class="floor-pill" data-piso="<?= (int) $numPiso ?>" aria-pressed="<?= $numPiso === 1 ? 'true' : 'false' ?>">
-                            Piso <?= (int) $numPiso ?> (<?= $libresPiso ?>/6)
-                        </button>
-                    <?php endforeach; ?>
-                    <button type="button" class="floor-pill" data-piso="todos" aria-pressed="false">Ver los 10 Pisos</button>
-                </div>
-
-                <div class="pisos-lista">
-                    <?php foreach ($datosCroquis['pisos'] as $numPiso => $lista) : ?>
-                        <?php
-                        $libresPiso = count(array_filter($lista, static fn($c) => $c['estado'] === 'libre'));
-                        $filaSuperior = array_slice($lista, 0, 3);
-                        $filaInferior = array_slice($lista, 3, 3);
-                        ?>
-                        <article class="piso-card" data-piso="<?= (int) $numPiso ?>" <?= $numPiso !== 1 ? 'hidden' : '' ?>>
-                            <div class="piso-titulo">
-                                <strong><?= $numPiso === 1 ? 'Piso 1 (Planta Baja)' : 'Piso ' . (int) $numPiso ?></strong>
-                                <span class="badge <?= $libresPiso > 0 ? 'text-bg-success' : 'text-bg-danger' ?>"><?= $libresPiso ?>/6 libres</span>
-                            </div>
-
-                            <div class="parqueo" role="region" aria-label="Croquis de 6 puestos con carril central del Piso <?= (int) $numPiso ?>">
-                                <div class="fila fila-a">
-                                    <?php foreach ($filaSuperior as $i => $cas) : ?>
-                                        <?php
-                                        $idCas = (int) $cas['id_casilla'];
-                                        renderPuesto($cas, $i + 1, 'arriba', $esAdmin, $ocupantesPorCasilla[$idCas] ?? null, $reservasPorCasilla[$idCas] ?? null);
-                                        ?>
-                                    <?php endforeach; ?>
-                                </div>
-
-                                <div class="carril">
-                                    <span class="acceso">ENTRADA &rarr;</span>
-                                    <span class="carril-linea" aria-hidden="true"></span>
-                                    <span class="acceso">&rarr; SALIDA</span>
-                                </div>
-
-                                <div class="fila fila-b">
-                                    <?php foreach ($filaInferior as $i => $cas) : ?>
-                                        <?php
-                                        $idCas = (int) $cas['id_casilla'];
-                                        renderPuesto($cas, $i + 4, 'abajo', $esAdmin, $ocupantesPorCasilla[$idCas] ?? null, $reservasPorCasilla[$idCas] ?? null);
-                                        ?>
-                                    <?php endforeach; ?>
-                                </div>
-                            </div>
-                        </article>
-                    <?php endforeach; ?>
-                </div>
+                    <div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between text-start gap-2">
+                        <div>
+                            <div class="fw-bold small">Pago instantáneo</div>
+                            <div class="small text-body-secondary">Confirmación con QR</div>
+                        </div>
+                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-body-secondary flex-shrink-0" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                            <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/>
+                        </svg>
+                    </div>
+                </aside>
             </div>
         </section>
 
-        <section class="row g-3 g-lg-4 mb-4" aria-label="Alquiler de puestos">
+        <section id="seccion-alquiler" class="row g-3 g-lg-4 mb-4" aria-label="Alquiler de puestos">
             <div class="col-12 col-lg-5">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
@@ -344,7 +399,7 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                                     <input type="datetime-local" id="alq-fin" name="fecha_hora_fin" class="form-control" value="<?= h($dosHorasLocal) ?>" required>
                                 </div>
                                 <div class="col-12">
-                                    <div class="p-2 rounded bg-light border small d-flex justify-content-between">
+                                    <div class="p-2 rounded bg-body-tertiary border small d-flex justify-content-between">
                                         <span>Total a pagar por tiempo:</span>
                                         <strong id="alq-estimado" data-precio-hora="<?= number_format($precioHoraBase, 2, '.', '') ?>"></strong>
                                     </div>
@@ -415,7 +470,7 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
         </section>
 
         <?php if ($esAdmin) : ?>
-            <section class="row g-3 g-lg-4 mb-4" aria-label="Control operativo de administrador">
+            <section id="seccion-operacion" class="row g-3 g-lg-4 mb-4" aria-label="Control operativo de administrador">
                 <div class="col-12 col-xl-4">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
@@ -461,7 +516,35 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                     </div>
                 </div>
 
-                <div class="col-12 col-xl-8">
+                <div class="col-12 col-xl-8 d-flex flex-column gap-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                <h2 class="h5 mb-0">Escáner RFID de Salida (QR Automático)</h2>
+                                <form action="controllers/registrar_salida.php" method="POST" class="d-inline">
+                                    <input type="hidden" name="accion" value="limpiar_pantalla">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Quitar QR de Pantalla</button>
+                                </form>
+                            </div>
+                            <form action="controllers/registrar_salida.php" method="POST" class="row g-2 align-items-end">
+                                <div class="col-12 col-md-6">
+                                    <label for="rfid-salida-scan" class="form-label small fw-semibold mb-1">Pasar tarjeta RFID o escribir UID / Ticket *</label>
+                                    <input type="text" id="rfid-salida-scan" name="uid_rfid" class="form-control" required minlength="3" maxlength="32" autocomplete="off" spellcheck="false" placeholder="Acerca tarjeta RFID (Enter automático)">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label for="rfid-salida-metodo" class="form-label small fw-semibold mb-1">Método</label>
+                                    <select id="rfid-salida-metodo" name="metodo_pago" class="form-select">
+                                        <option value="qr_transferencia">QR Pago</option>
+                                        <option value="efectivo">Efectivo</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-3 d-grid">
+                                    <button type="submit" class="btn btn-success">Cobrar y Generar QR</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                     <?php require_once __DIR__ . '/controllers/listar_ingresos.php'; ?>
                 </div>
             </section>
@@ -511,7 +594,7 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                         <div class="card-body">
                             <h2 class="h5 mb-3">Precios y Tarifas (Bs)</h2>
                             <?php foreach ($tarifas as $t) : ?>
-                                <form action="controllers/auth.php" method="POST" class="row g-2 align-items-end border rounded p-2 mb-2 bg-light">
+                                <form action="controllers/auth.php" method="POST" class="row g-2 align-items-end border rounded p-2 mb-2 bg-body-tertiary">
                                     <input type="hidden" name="accion" value="actualizar_tarifa">
                                     <input type="hidden" name="id_tarifa" value="<?= (int) $t['id_tarifa'] ?>">
                                     <div class="col-12 fw-semibold small"><?= h((string) $t['nombre']) ?></div>
@@ -537,8 +620,9 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                 </div>
             </section>
 
+            <?php if ($rolActual === 'admin') : ?>
             <section class="row g-3 g-lg-4" aria-label="Gestión de administradores y usuarios">
-                <div class="col-12 col-lg-5">
+                <div class="col-12 col-lg-4">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
                             <h2 class="h5 mb-3">Registrar Administrador / Cuenta</h2>
@@ -576,27 +660,48 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                     </div>
                 </div>
 
-                <div class="col-12 col-lg-7">
+                <div class="col-12 col-lg-8">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body">
-                            <h2 class="h5 mb-3">Usuarios Registrados</h2>
+                            <h2 class="h5 mb-3">Usuarios y Roles</h2>
                             <div class="table-responsive">
                                 <table class="table table-sm align-middle mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Nombre</th>
-                                            <th>Correo</th>
-                                            <th>Usuario</th>
-                                            <th>Rol</th>
+                                            <th>Usuario / Correo</th>
+                                            <th>Rol y Estado</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($usuariosLista as $u) : ?>
+                                            <?php $esMiCuenta = ((int) $u['id_usuario'] === $idUsuarioActual); ?>
                                             <tr>
                                                 <td><?= h((string) $u['nombre']) ?></td>
-                                                <td class="small"><?= h((string) ($u['correo'] ?: '-')) ?></td>
-                                                <td><code><?= h((string) $u['usuario']) ?></code></td>
-                                                <td><span class="badge <?= $u['rol'] === 'admin' ? 'text-bg-primary' : ($u['rol'] === 'operador' ? 'text-bg-info' : 'text-bg-secondary') ?>"><?= h((string) $u['rol']) ?></span></td>
+                                                <td class="small">
+                                                    <code><?= h((string) $u['usuario']) ?></code><br>
+                                                    <span class="text-body-secondary"><?= h((string) ($u['correo'] ?: '-')) ?></span>
+                                                </td>
+                                                <td>
+                                                    <?php if ($esMiCuenta) : ?>
+                                                        <span class="badge text-bg-primary"><?= h((string) $u['rol']) ?> (Tú)</span>
+                                                    <?php else : ?>
+                                                        <form action="controllers/auth.php" method="POST" class="d-flex flex-wrap gap-1 align-items-center">
+                                                            <input type="hidden" name="accion" value="cambiar_rol">
+                                                            <input type="hidden" name="id_usuario" value="<?= (int) $u['id_usuario'] ?>">
+                                                            <select name="rol" class="form-select form-select-sm w-auto" aria-label="Rol de <?= h((string) $u['usuario']) ?>">
+                                                                <option value="usuario" <?= $u['rol'] === 'usuario' ? 'selected' : '' ?>>usuario</option>
+                                                                <option value="operador" <?= $u['rol'] === 'operador' ? 'selected' : '' ?>>operador</option>
+                                                                <option value="admin" <?= $u['rol'] === 'admin' ? 'selected' : '' ?>>admin</option>
+                                                            </select>
+                                                            <select name="activo" class="form-select form-select-sm w-auto" aria-label="Estado de <?= h((string) $u['usuario']) ?>">
+                                                                <option value="1" <?= (int) $u['activo'] === 1 ? 'selected' : '' ?>>Activo</option>
+                                                                <option value="0" <?= (int) $u['activo'] === 0 ? 'selected' : '' ?>>Inactivo</option>
+                                                            </select>
+                                                            <button type="submit" class="btn btn-sm btn-outline-primary">Guardar</button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -606,11 +711,12 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                     </div>
                 </div>
             </section>
+            <?php endif; ?>
         <?php endif; ?>
     </main>
 
     <dialog id="modal-auth" class="auth-dialog" closedby="any" aria-labelledby="titulo-modal-auth">
-        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-body-tertiary">
             <h2 id="titulo-modal-auth" class="h5 mb-0">Acceso a SKY-BOX</h2>
             <form method="dialog">
                 <button type="submit" class="btn-close" aria-label="Cerrar"></button>
@@ -664,21 +770,49 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                         <button type="button" class="btn btn-outline-secondary" data-toggle-pass="reg-pass">Ver</button>
                     </div>
                 </div>
-                <div class="col-12">
-                    <details class="small">
-                        <summary class="text-body-secondary">¿Registro de Administrador? (Opcional)</summary>
-                        <div class="mt-2">
-                            <label for="reg-codigo-admin" class="form-label mb-1">Clave de autorización Admin</label>
-                            <input type="password" id="reg-codigo-admin" name="codigo_admin" class="form-control form-control-sm" placeholder="Dejar vacío para usuario normal">
-                        </div>
-                    </details>
-                </div>
                 <div class="col-12 d-grid">
                     <button type="submit" class="btn btn-success">Crear Cuenta</button>
                 </div>
             </form>
         </div>
     </dialog>
+
+    <?php if ($esAdmin && !empty($alerta['salida']['qr_simulado'])) : ?>
+        <?php
+        $sal = $alerta['salida'];
+        $qrSim = $sal['qr_simulado'];
+        $qrImg = (string) ($qrSim['qr_imagen'] ?? '');
+        ?>
+        <dialog id="modal-qr-salida" class="auth-dialog qr-dialog" closedby="any" data-auto-open="true" aria-labelledby="titulo-modal-qr">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-body-tertiary">
+                <h2 id="titulo-modal-qr" class="h5 mb-0">Comprobante de Pago QR</h2>
+                <form method="dialog">
+                    <button type="submit" class="btn-close" aria-label="Cerrar"></button>
+                </form>
+            </div>
+            <div class="p-4 text-center">
+                <?php if ($qrImg !== '' && is_file(__DIR__ . '/' . $qrImg)) : ?>
+                    <img src="<?= h($qrImg) ?>?t=<?= time() ?>" alt="QR Local de Pago" class="qr-img-local mx-auto mb-3">
+                <?php endif; ?>
+                <div class="fs-4 fw-bold text-primary mb-1"><?= number_format((float) $sal['total_pagado'], 2) ?> Bs</div>
+                <div class="small text-body-secondary mb-2">Estadía: <strong><?= h((string) $sal['tiempo']) ?></strong> &middot; Puesto: <strong><?= h((string) ($sal['casilla'] ?? '-')) ?></strong></div>
+                <div class="small bg-body-tertiary border rounded p-2 text-start mb-3">
+                    <div><strong>Ticket:</strong> <span class="font-monospace"><?= h((string) $sal['token_qr']) ?></span></div>
+                    <div><strong>RFID:</strong> <code><?= h((string) $sal['uid_rfid']) ?></code></div>
+                    <div><strong>Referencia:</strong> <code><?= h((string) $qrSim['referencia']) ?></code></div>
+                </div>
+                <div class="d-grid gap-2">
+                    <form action="controllers/registrar_salida.php" method="POST" class="d-grid">
+                        <input type="hidden" name="accion" value="limpiar_pantalla">
+                        <button type="submit" class="btn btn-primary">Confirmar Pago y Quitar QR Exterior</button>
+                    </form>
+                    <form method="dialog" class="d-grid">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar Solo Esta Ventana</button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+    <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="assets/js/app.js"></script>

@@ -7,3 +7,5 @@ Thumbs.db
 .idea/
 vendor/
 node_modules/
+assets/qr/*.png
+assets/qr/*.json

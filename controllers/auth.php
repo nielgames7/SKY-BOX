@@ -5,8 +5,6 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../config/conexion.php';
 
-const CLAVE_REGISTRO_ADMIN = 'SKYBOX-ADMIN';
-
 function volverInicio($tipo, $mensaje)
 {
     $_SESSION['alerta'] = ['tipo' => $tipo, 'mensaje' => $mensaje];
@@ -60,31 +58,24 @@ if ($accion === 'login') {
     $_SESSION['usuario_login'] = $user['usuario'];
     $_SESSION['rol'] = $user['rol'];
 
-    $etiquetaRol = in_array($user['rol'], ['admin', 'operador'], true) ? 'Administrador (privilegios completos)' : 'Usuario (acceso limitado)';
+    $etiquetaRol = $user['rol'] === 'admin'
+        ? 'Administrador (privilegios completos)'
+        : ($user['rol'] === 'operador' ? 'Operador de portería' : 'Usuario (acceso limitado)');
     volverInicio('success', "Bienvenido, {$user['nombre']}. Ingresaste como {$etiquetaRol}.");
 }
 
-if ($accion === 'registrar') {
-    $nombre = trim($_POST['nombre'] ?? '');
-    $correo = strtolower(trim($_POST['correo'] ?? ''));
-    $usuario = trim($_POST['usuario'] ?? '');
-    $clave = (string) ($_POST['password'] ?? '');
-    $codigoAdmin = trim($_POST['codigo_admin'] ?? '');
+function crearCuenta(PDO $pdo, array $datos, string $rol): array
+{
+    $nombre = trim((string) ($datos['nombre'] ?? ''));
+    $correo = strtolower(trim((string) ($datos['correo'] ?? '')));
+    $usuario = trim((string) ($datos['usuario'] ?? ''));
+    $clave = (string) ($datos['password'] ?? '');
 
     if ($nombre === '' || strlen($usuario) < 3 || strlen($clave) < 4) {
         volverInicio('danger', 'Completa nombre, usuario (mín. 3 caracteres) y contraseña (mín. 4 caracteres).');
     }
-
     if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         volverInicio('danger', 'Ingresa un correo electrónico válido.');
-    }
-
-    $rolAsignado = 'usuario';
-    if ($codigoAdmin !== '') {
-        if ($codigoAdmin !== CLAVE_REGISTRO_ADMIN) {
-            volverInicio('danger', 'La clave de autorización para administrador no es correcta.');
-        }
-        $rolAsignado = 'admin';
     }
 
     $existe = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE usuario = ? OR correo = ? LIMIT 1');
@@ -95,18 +86,21 @@ if ($accion === 'registrar') {
 
     $hash = password_hash($clave, PASSWORD_DEFAULT);
     $pdo->prepare('INSERT INTO usuarios (nombre, correo, usuario, password, rol) VALUES (?, ?, ?, ?, ?)')
-        ->execute([$nombre, $correo, $usuario, $hash, $rolAsignado]);
+        ->execute([$nombre, $correo, $usuario, $hash, $rol]);
+
+    return [(int) $pdo->lastInsertId(), $nombre, $usuario];
+}
+
+if ($accion === 'registrar') {
+    [$idNuevo, $nombre, $usuario] = crearCuenta($pdo, $_POST, 'usuario');
 
     session_regenerate_id(true);
-    $_SESSION['id_usuario'] = (int) $pdo->lastInsertId();
+    $_SESSION['id_usuario'] = $idNuevo;
     $_SESSION['nombre_usuario'] = $nombre;
     $_SESSION['usuario_login'] = $usuario;
-    $_SESSION['rol'] = $rolAsignado;
+    $_SESSION['rol'] = 'usuario';
 
-    $msg = $rolAsignado === 'admin'
-        ? "Cuenta de Administrador creada. Tienes privilegios completos, {$nombre}."
-        : "Cuenta de Usuario creada. Ya puedes alquilar y pagar puestos disponibles, {$nombre}.";
-    volverInicio('success', $msg);
+    volverInicio('success', "Cuenta de Usuario creada. Ya puedes alquilar y pagar puestos disponibles, {$nombre}.");
 }
 
 if ($accion === 'crear_admin') {
@@ -114,27 +108,34 @@ if ($accion === 'crear_admin') {
         volverInicio('danger', 'Solo un administrador puede crear cuentas administrativas.');
     }
 
-    $nombre = trim($_POST['nombre'] ?? '');
-    $correo = strtolower(trim($_POST['correo'] ?? ''));
-    $usuario = trim($_POST['usuario'] ?? '');
-    $clave = (string) ($_POST['password'] ?? '');
     $rol = in_array($_POST['rol'] ?? '', ['admin', 'operador', 'usuario'], true) ? $_POST['rol'] : 'admin';
-
-    if ($nombre === '' || strlen($usuario) < 3 || strlen($clave) < 4 || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-        volverInicio('danger', 'Verifica nombre, correo válido, usuario y contraseña (mín. 4 caracteres).');
-    }
-
-    $existe = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE usuario = ? OR correo = ? LIMIT 1');
-    $existe->execute([$usuario, $correo]);
-    if ($existe->fetch()) {
-        volverInicio('danger', 'Ese usuario o correo ya existe.');
-    }
-
-    $hash = password_hash($clave, PASSWORD_DEFAULT);
-    $pdo->prepare('INSERT INTO usuarios (nombre, correo, usuario, password, rol) VALUES (?, ?, ?, ?, ?)')
-        ->execute([$nombre, $correo, $usuario, $hash, $rol]);
+    [, , $usuario] = crearCuenta($pdo, $_POST, $rol);
 
     volverInicio('success', "Cuenta '{$usuario}' creada con rol {$rol}.");
+}
+
+if ($accion === 'cambiar_rol') {
+    if (($_SESSION['rol'] ?? 'usuario') !== 'admin') {
+        volverInicio('danger', 'Solo un administrador puede otorgar o cambiar roles.');
+    }
+
+    $idObjetivo = (int) ($_POST['id_usuario'] ?? 0);
+    $nuevoRol = (string) ($_POST['rol'] ?? '');
+    $nuevoActivo = isset($_POST['activo']) && (int) $_POST['activo'] === 0 ? 0 : 1;
+
+    if ($idObjetivo <= 0 || !in_array($nuevoRol, ['admin', 'operador', 'usuario'], true)) {
+        volverInicio('danger', 'Datos de usuario o rol no válidos.');
+    }
+
+    if ($idObjetivo === (int) ($_SESSION['id_usuario'] ?? 0) && ($nuevoRol !== 'admin' || $nuevoActivo === 0)) {
+        volverInicio('danger', 'No puedes quitarte tu propio rol de administrador ni desactivar tu cuenta activa.');
+    }
+
+    $stmt = $pdo->prepare('UPDATE usuarios SET rol = ?, activo = ? WHERE id_usuario = ?');
+    $stmt->execute([$nuevoRol, $nuevoActivo, $idObjetivo]);
+
+    $estadoTxt = $nuevoActivo === 1 ? 'activo' : 'inactivo';
+    volverInicio('success', "Permisos actualizados: rol '{$nuevoRol}' ({$estadoTxt}).");
 }
 
 if ($accion === 'actualizar_tarifa') {

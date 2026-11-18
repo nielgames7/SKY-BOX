@@ -5,6 +5,11 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../config/conexion.php';
 
+$rutaPhpQrCode = __DIR__ . '/../phpqrcode/qrlib.php';
+if (is_file($rutaPhpQrCode)) {
+    include_once $rutaPhpQrCode;
+}
+
 function responderSalida($tipo, $mensaje, $datos = [])
 {
     $esJson = ($_REQUEST['formato'] ?? '') === 'json'
@@ -66,20 +71,38 @@ function calcularLiquidacion($registro)
 function generarQrSimulado($tokenQr, $uidRfid, $totalBs, $fechaSalida)
 {
     $referencia = 'PAY-QR-' . date('YmdHis') . '-' . strtoupper(bin2hex(random_bytes(3)));
+    $montoTexto = number_format((float) $totalBs, 2, '.', '');
+    $mensajeQr = "SKY-BOX | Ha pagado {$montoTexto} Bs. | Ticket: {$tokenQr} | RFID: {$uidRfid} | Ref: {$referencia}";
+
     $payload = [
         'servicio' => 'SKY-BOX',
         'referencia' => $referencia,
         'ticket' => $tokenQr,
         'uid_rfid' => $uidRfid,
-        'monto' => number_format($totalBs, 2, '.', ''),
+        'monto' => $montoTexto,
         'moneda' => 'BOB',
         'fecha' => $fechaSalida,
     ];
+
+    $qrImagen = '';
+    if (class_exists('QRcode') && function_exists('imagepng')) {
+        $dirQr = __DIR__ . '/../assets/qr';
+        if (is_dir($dirQr) || mkdir($dirQr, 0775, true)) {
+            $archivoQr = $dirQr . '/qr_pago.png';
+            // Genera el QR localmente (Texto, Archivo, Nivel de correccion, Tamano)
+            QRcode::png($mensajeQr, $archivoQr, QR_ECLEVEL_L, 6);
+            if (is_file($archivoQr)) {
+                $qrImagen = 'assets/qr/qr_pago.png';
+            }
+        }
+    }
 
     return [
         'referencia' => $referencia,
         'monto' => $totalBs,
         'moneda' => 'BOB',
+        'mensaje_qr' => $mensajeQr,
+        'qr_imagen' => $qrImagen,
         'qr_texto' => json_encode($payload, JSON_UNESCAPED_UNICODE),
     ];
 }
@@ -108,8 +131,8 @@ function procesarSalida($pdo, $entrada)
         $stmt = $pdo->prepare($sql . 'AND r.id_registro = ? LIMIT 1');
         $stmt->execute([$idRegistro]);
     } elseif ($uidRfid !== '') {
-        $stmt = $pdo->prepare($sql . 'AND r.uid_rfid = ? ORDER BY r.id_registro DESC LIMIT 1');
-        $stmt->execute([$uidRfid]);
+        $stmt = $pdo->prepare($sql . 'AND (r.uid_rfid = ? OR r.token_qr = ?) ORDER BY r.id_registro DESC LIMIT 1');
+        $stmt->execute([$uidRfid, $uidRfid]);
     } else {
         $stmt = $pdo->prepare($sql . 'AND r.token_qr = ? LIMIT 1');
         $stmt->execute([$tokenQr]);
@@ -149,6 +172,23 @@ function procesarSalida($pdo, $entrada)
         throw $e;
     }
 
+    if ($qr['qr_imagen'] !== '') {
+        $eventoPantalla = [
+            'evento' => $qr['referencia'],
+            'ticket' => (string) $registro['token_qr'],
+            'casilla' => (string) ($registro['casilla'] ?? '-'),
+            'tiempo' => $liq['tiempo'],
+            'total_bs' => number_format((float) $liq['total_bs'], 2, '.', ''),
+            'qr_imagen' => $qr['qr_imagen'],
+            'creado_en' => time(),
+        ];
+        file_put_contents(
+            __DIR__ . '/../assets/qr/ultimo_pago.json',
+            json_encode($eventoPantalla, JSON_UNESCAPED_UNICODE),
+            LOCK_EX
+        );
+    }
+
     return [
         'id_registro' => (int) $registro['id_registro'],
         'uid_rfid' => $registro['uid_rfid'],
@@ -165,6 +205,14 @@ function procesarSalida($pdo, $entrada)
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
         responderSalida('danger', 'Solo un administrador u operador puede registrar salidas y cobros.');
+    }
+
+    if (($_POST['accion'] ?? '') === 'limpiar_pantalla') {
+        $dirQr = __DIR__ . '/../assets/qr';
+        if (is_dir($dirQr) || mkdir($dirQr, 0775, true)) {
+            file_put_contents($dirQr . '/ultimo_pago.json', '{"evento":""}', LOCK_EX);
+        }
+        responderSalida('success', 'Pantalla exterior vuelta al mensaje de bienvenida.');
     }
 
     if (!isset($pdo) || !($pdo instanceof PDO)) {
