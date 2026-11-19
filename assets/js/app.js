@@ -80,18 +80,14 @@
 
   const floorBtns = document.querySelectorAll('.floor-pill[data-piso]');
   const floorCards = document.querySelectorAll('.piso-card[data-piso]');
-  const pillPiso = document.getElementById('pill-piso');
 
-  const mostrarPiso = (piso) => {
-    floorBtns.forEach((b) => b.setAttribute('aria-pressed', b.dataset.piso === piso ? 'true' : 'false'));
-    floorCards.forEach((c) => { c.hidden = piso !== 'todos' && c.dataset.piso !== piso; });
-    if (pillPiso) pillPiso.value = piso;
-  };
-
-  floorBtns.forEach((btn) => btn.addEventListener('click', () => mostrarPiso(btn.dataset.piso)));
-  if (pillPiso) {
-    pillPiso.addEventListener('change', () => mostrarPiso(pillPiso.value));
-  }
+  floorBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const piso = btn.dataset.piso;
+      floorBtns.forEach((b) => b.setAttribute('aria-pressed', b.dataset.piso === piso ? 'true' : 'false'));
+      floorCards.forEach((c) => { c.hidden = piso !== 'todos' && c.dataset.piso !== piso; });
+    });
+  });
 
   const selPisoAlq = document.getElementById('alq-piso');
   const selCasAlq = document.getElementById('alq-casilla');
@@ -123,30 +119,24 @@
 
   const inpIni = document.getElementById('alq-inicio');
   const inpFin = document.getElementById('alq-fin');
-  const pillIni = document.getElementById('pill-inicio');
-  const pillFin = document.getElementById('pill-fin');
   const outEst = document.getElementById('alq-estimado');
 
-  const actualizarEstimado = () => {
-    if (!inpIni || !inpFin || !outEst) return;
-    const tarifaHora = parseFloat(outEst.dataset.precioHora || '5');
-    const t1 = Date.parse(inpIni.value);
-    const t2 = Date.parse(inpFin.value);
-    if (!t1 || !t2 || t2 <= t1) {
-      outEst.textContent = 'Selecciona un rango válido';
-      return;
-    }
-    const horas = Math.max(1, Math.ceil((t2 - t1) / 3600000));
-    outEst.textContent = `${horas} h × ${tarifaHora.toFixed(2)} Bs = ${(horas * tarifaHora).toFixed(2)} Bs`;
-  };
-
   if (inpIni && inpFin && outEst) {
-    inpIni.addEventListener('change', () => { if (pillIni) pillIni.value = inpIni.value; actualizarEstimado(); });
-    inpFin.addEventListener('change', () => { if (pillFin) pillFin.value = inpFin.value; actualizarEstimado(); });
+    const tarifaHora = parseFloat(outEst.dataset.precioHora || '5');
+    const actualizarEstimado = () => {
+      const t1 = Date.parse(inpIni.value);
+      const t2 = Date.parse(inpFin.value);
+      if (!t1 || !t2 || t2 <= t1) {
+        outEst.textContent = 'Selecciona un rango válido';
+        return;
+      }
+      const horas = Math.max(1, Math.ceil((t2 - t1) / 3600000));
+      outEst.textContent = `${horas} h × ${tarifaHora.toFixed(2)} Bs = ${(horas * tarifaHora).toFixed(2)} Bs`;
+    };
+    inpIni.addEventListener('change', actualizarEstimado);
+    inpFin.addEventListener('change', actualizarEstimado);
     actualizarEstimado();
   }
-  if (pillIni && inpIni) pillIni.addEventListener('change', () => { inpIni.value = pillIni.value; actualizarEstimado(); });
-  if (pillFin && inpFin) pillFin.addEventListener('change', () => { inpFin.value = pillFin.value; actualizarEstimado(); });
 
   const scanInput = document.getElementById('rfid-salida-scan');
   if (scanInput) {

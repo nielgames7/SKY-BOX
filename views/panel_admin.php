@@ -186,7 +186,7 @@
                         <input type="password" id="adm-pass" name="password" class="form-control form-control-sm" minlength="4" autocomplete="new-password" required>
                     </div>
                     <div class="col-12 d-grid mt-2">
-                        <button type="submit" class="btn btn-sm btn-dark">Crear Cuenta</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Crear Cuenta</button>
                     </div>
                 </form>
             </div>

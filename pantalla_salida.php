@@ -55,8 +55,8 @@ if (!is_file($estadoFile)) {
             align-items: center;
             gap: 0.5rem;
             font-size: 0.85rem;
-            color: #15803d;
-            background: #dcfce7;
+            color: #059669;
+            background: #d1fae5;
             padding: 0.4rem 0.9rem;
             border-radius: 999px;
             font-weight: 600;
@@ -66,7 +66,7 @@ if (!is_file($estadoFile)) {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #16a34a;
+            background: #10b981;
         }
         .qr-img {
             width: 240px;
@@ -80,7 +80,7 @@ if (!is_file($estadoFile)) {
             margin: 0.75rem auto 1rem;
             display: block;
         }
-        .monto { font-size: 2.25rem; font-weight: 800; color: #0d9488; margin: 0.25rem 0; }
+        .monto { font-size: 2.25rem; font-weight: 800; color: #10b981; margin: 0.25rem 0; }
         .detalle {
             background: #f8fafc;
             border: 1px solid #e2e8f0;

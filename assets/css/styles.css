@@ -6,8 +6,8 @@
   --sb-border: light-dark(#e2e8f0, #273449);
   --sb-text: light-dark(#0f172a, #f1f5f9);
   --sb-muted: light-dark(#475569, #94a3b8);
-  --sb-teal: #0d9488;
-  --sb-teal-dark: #0f766e;
+  --sb-teal: #10b981;
+  --sb-teal-dark: #059669;
   --sb-blueprint: light-dark(#f1f5f9, #1b2636);
   --sb-lane-text: light-dark(#334155, #cbd5e1);
   --sb-line: light-dark(#64748b, #94a3b8);
@@ -19,19 +19,25 @@
 :root,
 [data-bs-theme="dark"],
 [data-bs-theme="light"] {
-  --bs-primary: #0d9488 !important;
-  --bs-primary-rgb: 13, 148, 136 !important;
-  --bs-link-color: #0d9488 !important;
-  --bs-link-hover-color: #0f766e !important;
-  --bs-focus-ring-color: rgba(13, 148, 136, 0.25) !important;
+  --bs-primary: #10b981 !important;
+  --bs-primary-rgb: 16, 185, 129 !important;
+  --bs-success: #10b981 !important;
+  --bs-success-rgb: 16, 185, 129 !important;
+  --bs-link-color: #10b981 !important;
+  --bs-link-hover-color: #059669 !important;
+  --bs-focus-ring-color: rgba(16, 185, 129, 0.28) !important;
 }
 
 .btn-primary,
+.btn-success,
 button.btn-primary,
+button.btn-success,
 a.btn-primary,
-.btn-primary:not(:disabled):not(.disabled) {
-  background-color: #0d9488 !important;
-  border-color: #0d9488 !important;
+a.btn-success,
+.btn-primary:not(:disabled):not(.disabled),
+.btn-success:not(:disabled):not(.disabled) {
+  background-color: var(--sb-teal) !important;
+  border-color: var(--sb-teal) !important;
   color: #ffffff !important;
 }
 
@@ -39,18 +45,23 @@ a.btn-primary,
 .btn-primary:focus,
 .btn-primary:active,
 .btn-primary.active,
-.show > .btn-primary.dropdown-toggle {
-  background-color: #0f766e !important;
-  border-color: #0f766e !important;
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active,
+.btn-success.active,
+.show > .btn-primary.dropdown-toggle,
+.show > .btn-success.dropdown-toggle {
+  background-color: var(--sb-teal-dark) !important;
+  border-color: var(--sb-teal-dark) !important;
   color: #ffffff !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.28) !important;
 }
 
 .btn-outline-primary,
 button.btn-outline-primary,
 a.btn-outline-primary {
-  color: #0d9488 !important;
-  border-color: #0d9488 !important;
+  color: var(--sb-teal) !important;
+  border-color: var(--sb-teal) !important;
   background-color: transparent !important;
 }
 
@@ -62,25 +73,27 @@ a.btn-outline-primary {
 .btn-group > .btn-outline-primary.active,
 .btn-group > .btn-outline-primary[aria-selected="true"],
 .btn-check:checked + .btn-outline-primary {
-  background-color: #0d9488 !important;
-  border-color: #0d9488 !important;
+  background-color: var(--sb-teal) !important;
+  border-color: var(--sb-teal) !important;
   color: #ffffff !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.28) !important;
 }
 
-.text-primary {
-  color: #0d9488 !important;
+.text-primary,
+.text-success {
+  color: var(--sb-teal) !important;
 }
 
-.text-bg-primary {
-  background-color: #0d9488 !important;
+.text-bg-primary,
+.text-bg-success {
+  background-color: var(--sb-teal) !important;
   color: #ffffff !important;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: #0d9488 !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
+  border-color: var(--sb-teal) !important;
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.28) !important;
 }
 
 :root:has(> head > meta[name="color-scheme"][content="dark"]) {
@@ -126,85 +139,56 @@ body {
 }
 
 /* Alternador modo claro/oscuro sin duplicar estado en JS */
+.theme-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
 .theme-btn .theme-ico-light { display: none; }
-.theme-btn .theme-ico-dark { display: inline; }
+.theme-btn .theme-ico-dark { display: block; }
 
 @media (prefers-color-scheme: dark) {
-  :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .theme-btn .theme-ico-light { display: inline; }
+  :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .theme-btn .theme-ico-light { display: block; }
   :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .theme-btn .theme-ico-dark { display: none; }
 }
 
-:root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-btn .theme-ico-light { display: inline; }
+:root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-btn .theme-ico-light { display: block; }
 :root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-btn .theme-ico-dark { display: none; }
 
-/* Barra flotante de busqueda (Opcion 2) */
-.pill-searchbar {
-  max-width: 820px;
-  background-color: var(--sb-surface);
-  border: 1px solid var(--sb-border);
-  border-radius: 999px;
-  padding: 0.4rem 0.45rem 0.4rem 1.25rem;
-  display: flex;
-  flex-wrap: wrap;
+/* Anillo circular y tarjeta resumen de disponibilidad */
+.fw-black {
+  font-weight: 800;
+}
+
+.resumen-aside {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   align-items: center;
-  gap: 0.65rem;
-  box-shadow: 0 14px 30px -18px rgba(15, 23, 42, 0.25);
+  gap: 1rem;
 }
 
-.pill-seg {
-  flex: 1 1 140px;
-  min-inline-size: 0;
-  display: flex;
-  flex-direction: column;
-  padding-inline-end: 0.75rem;
-  border-inline-end: 1px solid var(--sb-border);
+.tarifa-valor {
+  font-size: 2.15rem;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
-.pill-seg:last-of-type {
-  border-inline-end: 0;
-}
-
-.pill-lbl {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--sb-muted);
-}
-
-.pill-ctrl {
-  border: 0;
-  background: transparent;
-  color: var(--sb-text);
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0;
-  outline: none;
-  inline-size: 100%;
-}
-
-.pill-cta {
-  background-color: var(--sb-teal);
-  color: #ffffff;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 0.6rem 1.35rem;
-  border: 0;
-  white-space: nowrap;
-}
-
-.pill-cta:hover {
-  background-color: var(--sb-teal-dark);
-  color: #ffffff;
-}
-
-/* Anillo circular de disponibilidad */
 .ring-wrap {
   position: relative;
-  width: 126px;
-  height: 126px;
+  width: 152px;
+  height: 152px;
   display: grid;
   place-items: center;
+}
+
+.ring-num {
+  font-size: 2.2rem;
+  font-weight: 800;
 }
 
 .ring-svg {
@@ -456,22 +440,6 @@ dialog.qr-dialog {
 
 dialog.auth-dialog::backdrop {
   background: rgba(15, 23, 42, 0.58);
-}
-
-@media (max-width: 767.98px) {
-  .pill-searchbar {
-    border-radius: 18px;
-    padding: 0.75rem;
-  }
-  .pill-seg {
-    border-inline-end: 0;
-    border-block-end: 1px solid var(--sb-border);
-    padding-inline-end: 0;
-    padding-block-end: 0.45rem;
-  }
-  .pill-cta {
-    width: 100%;
-  }
 }
 
 @media (max-width: 575.98px) {

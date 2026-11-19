@@ -46,9 +46,9 @@ $pctOcup = $totalCasillas > 0 ? (($totalCasillas - $conteo['libre']) / $totalCas
 $circ = 282.7;
 $dashOff = number_format($circ * $pctOcup, 1, '.', '');
 ?>
-<section id="seccion-disponibilidad" class="row g-3 g-lg-4 mb-4 align-items-stretch" aria-labelledby="titulo-croquis">
+<section id="seccion-disponibilidad" class="row g-3 g-lg-4 mb-4 align-items-start" aria-labelledby="titulo-croquis">
     <div class="col-12 col-lg-8">
-        <div class="sb-panel h-100 p-3 p-md-4">
+        <div class="sb-panel p-3 p-md-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                 <div>
                     <h1 id="titulo-croquis" class="h5 fw-bold mb-0">Plano del Estacionamiento</h1>
@@ -72,7 +72,6 @@ $dashOff = number_format($circ * $pctOcup, 1, '.', '');
                         P<?= (int) $numPiso ?> (<?= $libresPiso ?>/6)
                     </button>
                 <?php endforeach; ?>
-                <button type="button" class="floor-pill" data-piso="todos" aria-pressed="false">Todos</button>
             </div>
 
             <div class="pisos-lista">
@@ -120,43 +119,55 @@ $dashOff = number_format($circ * $pctOcup, 1, '.', '');
     </div>
 
     <div class="col-12 col-lg-4">
-        <aside class="sb-panel h-100 p-4 d-flex flex-column justify-content-between text-center" aria-label="Tarifa y disponibilidad">
-            <div>
-                <div class="small text-body-secondary fw-semibold">Tarifa</div>
-                <div class="display-6 fw-black mb-3"><?= number_format($precioHoraBase, 2) ?> Bs/h</div>
-                <hr class="opacity-25 my-3">
-                <div class="small text-body-secondary fw-semibold mb-2">Disponibilidad</div>
+        <aside class="sb-panel resumen-aside p-4 text-center" aria-label="Tarifa y disponibilidad">
+            <div class="pb-3 border-bottom">
+                <div class="small text-body-secondary fw-semibold text-uppercase">Tarifa Base</div>
+                <div class="tarifa-valor mt-1"><?= number_format($precioHoraBase, 2) ?> Bs/h</div>
+            </div>
 
-                <div class="ring-wrap mx-auto my-2">
+            <div class="py-2">
+                <div class="small text-body-secondary fw-semibold text-uppercase mb-2">Disponibilidad</div>
+                <div class="ring-wrap mx-auto">
                     <svg viewBox="0 0 110 110" class="ring-svg" aria-hidden="true">
                         <circle cx="55" cy="55" r="45" class="ring-track"></circle>
                         <circle cx="55" cy="55" r="45" class="ring-fill" stroke-dasharray="<?= $circ ?>" stroke-dashoffset="<?= $dashOff ?>" transform="rotate(-90 55 55)"></circle>
                     </svg>
                     <div class="ring-center">
-                        <span class="fs-2 fw-black lh-1"><?= $conteo['libre'] ?></span>
+                        <span class="ring-num lh-1"><?= $conteo['libre'] ?></span>
                         <span class="small text-body-secondary">libres de <?= $totalCasillas ?></span>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-center gap-3 small mt-3">
-                    <span><strong class="text-danger"><?= $conteo['ocupado'] ?></strong> Ocupados</span>
-                    <span><strong class="text-warning-emphasis"><?= $conteo['reservado'] ?></strong> Reservas</span>
-                </div>
-
-                <?php if ($esAdmin) : ?>
-                    <div class="mt-3 p-2 rounded-3 bg-body-tertiary border">
-                        <div class="small text-body-secondary">Recaudado Total</div>
-                        <div class="fs-5 fw-bold text-primary"><?= number_format($totalRecaudado, 2) ?> Bs</div>
+                <div class="row g-2 mt-3">
+                    <div class="col-6">
+                        <div class="p-2 rounded-3 bg-body-tertiary border">
+                            <div class="fs-5 fw-bold text-danger lh-1"><?= $conteo['ocupado'] ?></div>
+                            <div class="small text-body-secondary mt-1">Ocupados</div>
+                        </div>
                     </div>
-                <?php endif; ?>
+                    <div class="col-6">
+                        <div class="p-2 rounded-3 bg-body-tertiary border">
+                            <div class="fs-5 fw-bold text-warning lh-1"><?= $conteo['reservado'] ?></div>
+                            <div class="small text-body-secondary mt-1">Reservas</div>
+                        </div>
+                    </div>
+                    <?php if ($esAdmin) : ?>
+                        <div class="col-12">
+                            <div class="p-2 rounded-3 bg-body-tertiary border d-flex justify-content-between align-items-center px-3">
+                                <span class="small text-body-secondary fw-semibold">Recaudado Total</span>
+                                <span class="fs-5 fw-bold text-primary"><?= number_format($totalRecaudado, 2) ?> Bs</span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
-            <div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between text-start gap-2">
+            <div class="p-3 rounded-3 bg-body-tertiary border d-flex align-items-center justify-content-between text-start gap-2">
                 <div>
                     <div class="fw-bold small">Pago instantáneo</div>
                     <div class="small text-body-secondary">Confirmación con QR</div>
                 </div>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-body-secondary flex-shrink-0" aria-hidden="true">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-primary flex-shrink-0" aria-hidden="true">
                     <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
                     <path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h2M20 14v2"/>
                 </svg>

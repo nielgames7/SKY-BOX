@@ -18,7 +18,7 @@ $alerta = $_SESSION['alerta'] ?? null;
 unset($_SESSION['alerta']);
 
 $idUsuarioActual = isset($_SESSION['id_usuario']) ? (int) $_SESSION['id_usuario'] : 0;
-$nombreUsuarioActual = (string) ($_SESSION['nombre_usuario'] ?? '');
+$nombreUsuarioActual = trim(str_replace('(Demo Usuario)', '', (string) ($_SESSION['nombre_usuario'] ?? '')));
 $rolActual = (string) ($_SESSION['rol'] ?? 'usuario');
 $esAdmin = in_array($rolActual, ['admin', 'operador'], true);
 
@@ -104,41 +104,6 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
     <title>SKY-BOX | Estacionamiento Inteligente</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/styles.css?v=<?= file_exists(__DIR__ . '/assets/css/styles.css') ? filemtime(__DIR__ . '/assets/css/styles.css') : time() ?>">
-    <style>
-    :root, [data-bs-theme="dark"], [data-bs-theme="light"] {
-        --bs-primary: #0d9488 !important;
-        --bs-primary-rgb: 13, 148, 136 !important;
-    }
-    .btn-primary, button.btn-primary, a.btn-primary {
-        background-color: #0d9488 !important;
-        border-color: #0d9488 !important;
-        color: #ffffff !important;
-    }
-    .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
-        background-color: #0f766e !important;
-        border-color: #0f766e !important;
-        color: #ffffff !important;
-    }
-    .btn-outline-primary, button.btn-outline-primary {
-        color: #0d9488 !important;
-        border-color: #0d9488 !important;
-        background-color: transparent !important;
-    }
-    .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active,
-    .btn-outline-primary.active, .btn-outline-primary[aria-selected="true"],
-    .btn-group > .btn-outline-primary.active, .btn-group > .btn-outline-primary[aria-selected="true"],
-    .btn-check:checked + .btn-outline-primary {
-        background-color: #0d9488 !important;
-        border-color: #0d9488 !important;
-        color: #ffffff !important;
-    }
-    .text-primary { color: #0d9488 !important; }
-    .text-bg-primary { background-color: #0d9488 !important; color: #ffffff !important; }
-    .form-control:focus, .form-select:focus {
-        border-color: #0d9488 !important;
-        box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
-    }
-    </style>
 </head>
 <body>
     <header class="topbar-skybox sticky-top">
@@ -157,9 +122,14 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
             </nav>
 
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <button type="button" id="btn-theme-toggle" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 theme-btn" aria-label="Cambiar tema claro u oscuro">
-                    <span class="theme-ico-dark" aria-hidden="true">&#9790;</span>
-                    <span class="theme-ico-light" aria-hidden="true">&#9728;</span>
+                <button type="button" id="btn-theme-toggle" class="btn btn-sm btn-outline-secondary theme-btn" aria-label="Cambiar tema claro u oscuro">
+                    <svg class="theme-ico-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                    <svg class="theme-ico-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
                     <span class="visually-hidden">Alternar modo oscuro</span>
                 </button>
                 <?php if ($esAdmin) : ?>
@@ -171,7 +141,7 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                 <?php else : ?>
                     <span class="badge rounded-pill text-bg-secondary d-none d-sm-inline-block">Solo Lectura</span>
                     <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-open-auth="login">Iniciar Sesión</button>
-                    <button type="button" class="btn btn-sm btn-dark rounded-pill px-3" data-open-auth="register">Registrarse</button>
+                    <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-open-auth="register">Registrarse</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -191,27 +161,6 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         <?php endif; ?>
-
-        <section class="pill-searchbar mx-auto mb-4" aria-label="Filtro rápido de disponibilidad">
-            <div class="pill-seg">
-                <label for="pill-piso" class="pill-lbl">Nivel</label>
-                <select id="pill-piso" class="pill-ctrl">
-                    <?php for ($p = 1; $p <= 10; $p++) : ?>
-                        <option value="<?= $p ?>">Piso <?= $p ?></option>
-                    <?php endfor; ?>
-                    <option value="todos">Todos los Pisos</option>
-                </select>
-            </div>
-            <div class="pill-seg">
-                <label for="pill-inicio" class="pill-lbl">Entrada</label>
-                <input type="datetime-local" id="pill-inicio" class="pill-ctrl" value="<?= h($ahoraLocal) ?>">
-            </div>
-            <div class="pill-seg">
-                <label for="pill-fin" class="pill-lbl">Salida</label>
-                <input type="datetime-local" id="pill-fin" class="pill-ctrl" value="<?= h($dosHorasLocal) ?>">
-            </div>
-            <a href="#seccion-alquiler" class="btn pill-cta">Buscar Espacio</a>
-        </section>
 
         <?php require __DIR__ . '/views/croquis.php'; ?>
         <?php require __DIR__ . '/views/alquileres.php'; ?>
