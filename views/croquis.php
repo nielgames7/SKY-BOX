@@ -29,6 +29,7 @@ function renderPuesto(array $casilla, int $numero, string $orientacion, bool $es
             $contenido .= '<span class="puesto-extra">' . h((string) ($reserva['codigo_reserva'] ?? '')) . '</span>';
         }
         echo '<form action="controllers/logica_croquis.php" method="POST" class="puesto-form">'
+            . csrfCampo()
             . '<input type="hidden" name="id_casilla" value="' . (int) $casilla['id_casilla'] . '">'
             . '<button type="submit" class="' . $clases . '" title="' . h($codigo) . ': ' . ($etiquetas[$estado] ?? h($estado)) . '">' . $contenido . '</button>'
             . '</form>';

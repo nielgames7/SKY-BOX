@@ -4,6 +4,7 @@
             <div class="card-body">
                 <h2 class="h5 mb-3">Registrar Ingreso (RFID)</h2>
                 <form action="controllers/registrar_ingreso.php" method="POST" class="row g-3">
+                    <?= csrfCampo() ?>
                     <div class="col-12">
                         <label for="uid_rfid" class="form-label fw-semibold">UID de Tarjeta RFID *</label>
                         <input type="text" id="uid_rfid" name="uid_rfid" class="form-control" required minlength="3" maxlength="32" pattern="[A-Za-z0-9_-]{3,32}" autocomplete="off" spellcheck="false" placeholder="Ej: RFID-001">
@@ -50,11 +51,13 @@
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
                     <h2 class="h5 mb-0">Escáner RFID de Salida (QR Automático)</h2>
                     <form action="controllers/registrar_salida.php" method="POST" class="d-inline">
+                        <?= csrfCampo() ?>
                         <input type="hidden" name="accion" value="limpiar_pantalla">
                         <button type="submit" class="btn btn-sm btn-outline-secondary">Quitar QR de Pantalla</button>
                     </form>
                 </div>
                 <form action="controllers/registrar_salida.php" method="POST" class="row g-2 align-items-end">
+                    <?= csrfCampo() ?>
                     <div class="col-12 col-md-6">
                         <label for="rfid-salida-scan" class="form-label small fw-semibold mb-1">Pasar tarjeta RFID o escribir UID / Ticket *</label>
                         <input type="text" id="rfid-salida-scan" name="uid_rfid" class="form-control" required minlength="3" maxlength="32" autocomplete="off" spellcheck="false" placeholder="Acerca tarjeta RFID (Enter automático)">
@@ -123,6 +126,7 @@
                 <h2 class="h5 mb-3">Precios y Tarifas (Bs)</h2>
                 <?php foreach ($tarifas as $t) : ?>
                     <form action="controllers/auth.php" method="POST" class="row g-2 align-items-end border rounded p-2 mb-2 bg-body-tertiary">
+                        <?= csrfCampo() ?>
                         <input type="hidden" name="accion" value="actualizar_tarifa">
                         <input type="hidden" name="id_tarifa" value="<?= (int) $t['id_tarifa'] ?>">
                         <div class="col-12 fw-semibold small"><?= h((string) $t['nombre']) ?></div>
@@ -155,6 +159,7 @@
             <div class="card-body">
                 <h2 class="h5 mb-3">Registrar Administrador / Cuenta</h2>
                 <form action="controllers/auth.php" method="POST" class="row g-2">
+                    <?= csrfCampo() ?>
                     <input type="hidden" name="accion" value="crear_admin">
                     <div class="col-12">
                         <label for="adm-nombre" class="form-label small fw-semibold mb-1">Nombre completo *</label>
@@ -215,6 +220,7 @@
                                             <span class="badge text-bg-primary"><?= h((string) $u['rol']) ?> (Tú)</span>
                                         <?php else : ?>
                                             <form action="controllers/auth.php" method="POST" class="d-flex flex-wrap gap-1 align-items-center">
+                                                <?= csrfCampo() ?>
                                                 <input type="hidden" name="accion" value="cambiar_rol">
                                                 <input type="hidden" name="id_usuario" value="<?= (int) $u['id_usuario'] ?>">
                                                 <select name="rol" class="form-select form-select-sm w-auto" aria-label="Rol de <?= h((string) $u['usuario']) ?>">

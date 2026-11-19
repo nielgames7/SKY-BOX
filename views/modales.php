@@ -12,6 +12,7 @@
         </div>
 
         <form data-auth-panel="login" action="controllers/auth.php" method="POST" class="row g-3">
+            <?= csrfCampo() ?>
             <input type="hidden" name="accion" value="login">
             <div class="col-12">
                 <label for="login-id" class="form-label fw-semibold">Usuario o Correo *</label>
@@ -24,15 +25,13 @@
                     <button type="button" class="btn btn-outline-secondary" data-toggle-pass="login-pass">Ver</button>
                 </div>
             </div>
-            <div class="col-12 small text-body-secondary">
-                Demo Admin: <code>admin</code> / <code>admin123</code> &middot; Demo Usuario: <code>cliente1</code> / <code>admin123</code>
-            </div>
             <div class="col-12 d-grid">
                 <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
             </div>
         </form>
 
         <form data-auth-panel="register" action="controllers/auth.php" method="POST" class="row g-3" hidden>
+            <?= csrfCampo() ?>
             <input type="hidden" name="accion" value="registrar">
             <div class="col-12">
                 <label for="reg-nombre" class="form-label fw-semibold">Nombre Completo *</label>
@@ -86,6 +85,7 @@
             </div>
             <div class="d-grid gap-2">
                 <form action="controllers/registrar_salida.php" method="POST" class="d-grid">
+                    <?= csrfCampo() ?>
                     <input type="hidden" name="accion" value="limpiar_pantalla">
                     <button type="submit" class="btn btn-primary">Confirmar Pago y Quitar QR Exterior</button>
                 </form>

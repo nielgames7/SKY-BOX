@@ -78,6 +78,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
                                 <td class="text-nowrap"><?= htmlspecialchars(calcularTiempoTranscurrido((string) $fila['fecha_ingreso']), ENT_QUOTES, 'UTF-8') ?></td>
                                 <td class="text-nowrap">
                                     <form action="controllers/registrar_salida.php" method="POST" class="d-inline-flex gap-1">
+                                        <?= csrfCampo() ?>
                                         <input type="hidden" name="id_registro" value="<?= (int) $fila['id_registro'] ?>">
                                         <button type="submit" name="metodo_pago" value="qr_transferencia" class="btn btn-sm btn-primary">Cobrar QR</button>
                                         <button type="submit" name="metodo_pago" value="efectivo" class="btn btn-sm btn-outline-secondary">Efectivo</button>

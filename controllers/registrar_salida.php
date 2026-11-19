@@ -203,6 +203,10 @@ function procesarSalida($pdo, $entrada)
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    if (!validarCsrf()) {
+        responderSalida('danger', 'Sesión expirada o solicitud inválida. Recarga la página.');
+    }
+
     if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
         responderSalida('danger', 'Solo un administrador u operador puede registrar salidas y cobros.');
     }

@@ -22,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirigir('danger', 'Método no permitido.');
 }
 
+if (!validarCsrf()) {
+    redirigir('danger', 'Sesión expirada o solicitud inválida. Recarga la página.');
+}
+
 if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
     redirigir('danger', 'Solo un administrador u operador puede registrar ingresos.');
 }
@@ -48,7 +52,15 @@ try {
         redirigir('danger', "La tarjeta '{$uidRfid}' ya tiene un ingreso activo desde {$activo['fecha_ingreso']}.");
     }
 
-    if ($idCasilla !== null) {
+    if ($idReserva !== null) {
+        $stmtRes = $pdo->prepare("SELECT id_casilla FROM reservas WHERE id_reserva = :id AND estado = 'activa' LIMIT 1");
+        $stmtRes->execute([':id' => $idReserva]);
+        $reserva = $stmtRes->fetch();
+        if (!$reserva) {
+            redirigir('danger', 'La reserva seleccionada no está activa.');
+        }
+        $idCasilla = (int) $reserva['id_casilla'];
+    } elseif ($idCasilla !== null) {
         $stmtCas = $pdo->prepare('SELECT codigo, estado FROM casillas WHERE id_casilla = :id LIMIT 1');
         $stmtCas->execute([':id' => $idCasilla]);
         $casilla = $stmtCas->fetch();
@@ -82,6 +94,11 @@ try {
 
     $stmtUpd = $pdo->prepare("UPDATE casillas SET estado = 'ocupado' WHERE id_casilla = :id");
     $stmtUpd->execute([':id' => $idCasilla]);
+
+    if ($idReserva !== null) {
+        $pdo->prepare("UPDATE reservas SET estado = 'completada' WHERE id_reserva = :id")
+            ->execute([':id' => $idReserva]);
+    }
 
     $pdo->commit();
     redirigir('success', 'Ingreso registrado exitosamente.', $tokenQr);

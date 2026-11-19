@@ -28,6 +28,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     exit;
 }
 
+if (!validarCsrf()) {
+    volverInicio('danger', 'Sesión expirada o solicitud inválida. Recarga la página.');
+}
+
 if (!isset($pdo) || !($pdo instanceof PDO)) {
     volverInicio('danger', 'No hay conexión con la base de datos.');
 }

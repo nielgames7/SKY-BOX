@@ -39,6 +39,10 @@ function volverCroquis($tipo, $mensaje)
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    if (!validarCsrf()) {
+        volverCroquis('danger', 'Sesión expirada o solicitud inválida. Recarga la página.');
+    }
+
     if (!in_array($_SESSION['rol'] ?? 'usuario', ['admin', 'operador'], true)) {
         volverCroquis('danger', 'Acceso limitado: inicia sesión como administrador para modificar el croquis.');
     }

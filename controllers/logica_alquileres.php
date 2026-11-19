@@ -67,6 +67,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     return;
 }
 
+if (!validarCsrf()) {
+    volverAlquileres('danger', 'Sesión expirada o solicitud inválida. Recarga la página.');
+}
+
 if (!$pdo) {
     volverAlquileres('danger', 'No hay conexión con la base de datos.');
 }

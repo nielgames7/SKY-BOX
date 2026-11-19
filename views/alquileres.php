@@ -11,6 +11,7 @@
                     </div>
                 <?php else : ?>
                     <form action="controllers/logica_alquileres.php" method="POST" class="row g-3">
+                        <?= csrfCampo() ?>
                         <input type="hidden" name="accion" value="alquilar">
                         <input type="hidden" name="volver" value="index.php">
                         <div class="col-6">
@@ -99,6 +100,7 @@
                                             <td>
                                                 <?php if ($alq['estado'] === 'activa') : ?>
                                                     <form action="controllers/logica_alquileres.php" method="POST">
+                                                        <?= csrfCampo() ?>
                                                         <input type="hidden" name="accion" value="cancelar">
                                                         <input type="hidden" name="volver" value="index.php">
                                                         <input type="hidden" name="id_reserva" value="<?= (int) $alq['id_reserva'] ?>">
