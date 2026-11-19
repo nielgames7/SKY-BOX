@@ -80,7 +80,7 @@ if (!is_file($estadoFile)) {
             margin: 0.75rem auto 1rem;
             display: block;
         }
-        .monto { font-size: 2.25rem; font-weight: 800; color: #1d4ed8; margin: 0.25rem 0; }
+        .monto { font-size: 2.25rem; font-weight: 800; color: #0d9488; margin: 0.25rem 0; }
         .detalle {
             background: #f8fafc;
             border: 1px solid #e2e8f0;

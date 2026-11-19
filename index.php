@@ -103,7 +103,42 @@ $dosHorasLocal = date('Y-m-d\TH:i', strtotime('+2 hours'));
     </script>
     <title>SKY-BOX | Estacionamiento Inteligente</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css?v=<?= file_exists(__DIR__ . '/assets/css/styles.css') ? filemtime(__DIR__ . '/assets/css/styles.css') : time() ?>">
+    <style>
+    :root, [data-bs-theme="dark"], [data-bs-theme="light"] {
+        --bs-primary: #0d9488 !important;
+        --bs-primary-rgb: 13, 148, 136 !important;
+    }
+    .btn-primary, button.btn-primary, a.btn-primary {
+        background-color: #0d9488 !important;
+        border-color: #0d9488 !important;
+        color: #ffffff !important;
+    }
+    .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+        background-color: #0f766e !important;
+        border-color: #0f766e !important;
+        color: #ffffff !important;
+    }
+    .btn-outline-primary, button.btn-outline-primary {
+        color: #0d9488 !important;
+        border-color: #0d9488 !important;
+        background-color: transparent !important;
+    }
+    .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active,
+    .btn-outline-primary.active, .btn-outline-primary[aria-selected="true"],
+    .btn-group > .btn-outline-primary.active, .btn-group > .btn-outline-primary[aria-selected="true"],
+    .btn-check:checked + .btn-outline-primary {
+        background-color: #0d9488 !important;
+        border-color: #0d9488 !important;
+        color: #ffffff !important;
+    }
+    .text-primary { color: #0d9488 !important; }
+    .text-bg-primary { background-color: #0d9488 !important; color: #ffffff !important; }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d9488 !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
+    }
+    </style>
 </head>
 <body>
     <header class="topbar-skybox sticky-top">

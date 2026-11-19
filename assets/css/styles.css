@@ -8,12 +8,79 @@
   --sb-muted: light-dark(#475569, #94a3b8);
   --sb-teal: #0d9488;
   --sb-teal-dark: #0f766e;
-  --sb-blueprint: light-dark(#dbe5ef, #172231);
+  --sb-blueprint: light-dark(#f1f5f9, #1b2636);
   --sb-lane-text: light-dark(#334155, #cbd5e1);
   --sb-line: light-dark(#64748b, #94a3b8);
   --libre: #10b981;
   --ocupado: #ef4444;
   --reservado: #f59e0b;
+}
+
+:root,
+[data-bs-theme="dark"],
+[data-bs-theme="light"] {
+  --bs-primary: #0d9488 !important;
+  --bs-primary-rgb: 13, 148, 136 !important;
+  --bs-link-color: #0d9488 !important;
+  --bs-link-hover-color: #0f766e !important;
+  --bs-focus-ring-color: rgba(13, 148, 136, 0.25) !important;
+}
+
+.btn-primary,
+button.btn-primary,
+a.btn-primary,
+.btn-primary:not(:disabled):not(.disabled) {
+  background-color: #0d9488 !important;
+  border-color: #0d9488 !important;
+  color: #ffffff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.show > .btn-primary.dropdown-toggle {
+  background-color: #0f766e !important;
+  border-color: #0f766e !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
+}
+
+.btn-outline-primary,
+button.btn-outline-primary,
+a.btn-outline-primary {
+  color: #0d9488 !important;
+  border-color: #0d9488 !important;
+  background-color: transparent !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active,
+.btn-outline-primary.active,
+.btn-outline-primary[aria-selected="true"],
+.btn-group > .btn-outline-primary.active,
+.btn-group > .btn-outline-primary[aria-selected="true"],
+.btn-check:checked + .btn-outline-primary {
+  background-color: #0d9488 !important;
+  border-color: #0d9488 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
+}
+
+.text-primary {
+  color: #0d9488 !important;
+}
+
+.text-bg-primary {
+  background-color: #0d9488 !important;
+  color: #ffffff !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d9488 !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 148, 136, 0.25) !important;
 }
 
 :root:has(> head > meta[name="color-scheme"][content="dark"]) {
