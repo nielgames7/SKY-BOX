@@ -81,13 +81,25 @@
   const floorBtns = document.querySelectorAll('.floor-pill[data-piso]');
   const floorCards = document.querySelectorAll('.piso-card[data-piso]');
 
+  const activarPiso = (piso) => {
+    floorBtns.forEach((b) => b.setAttribute('aria-pressed', b.dataset.piso === piso ? 'true' : 'false'));
+    floorCards.forEach((c) => { c.hidden = c.dataset.piso !== piso; });
+  };
+
   floorBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const piso = btn.dataset.piso;
-      floorBtns.forEach((b) => b.setAttribute('aria-pressed', b.dataset.piso === piso ? 'true' : 'false'));
-      floorCards.forEach((c) => { c.hidden = piso !== 'todos' && c.dataset.piso !== piso; });
+      activarPiso(piso);
+      try { sessionStorage.setItem('skybox_piso', piso); } catch (_) {}
     });
   });
+
+  try {
+    const pisoGuardado = sessionStorage.getItem('skybox_piso');
+    if (pisoGuardado && document.querySelector(`.floor-pill[data-piso="${pisoGuardado}"]`)) {
+      activarPiso(pisoGuardado);
+    }
+  } catch (_) {}
 
   const selPisoAlq = document.getElementById('alq-piso');
   const selCasAlq = document.getElementById('alq-casilla');

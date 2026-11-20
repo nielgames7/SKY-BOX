@@ -42,6 +42,8 @@ function renderPuesto(array $casilla, int $numero, string $orientacion, bool $es
     echo '<div class="' . $clases . '"' . $attrs . ' title="' . h($codigo) . ': ' . ($etiquetas[$estado] ?? h($estado)) . '">' . $contenido . '</div>';
 }
 
+$pisoActivo = (int) ($_SESSION['piso_activo'] ?? 1);
+unset($_SESSION['piso_activo']);
 $pctOcup = $totalCasillas > 0 ? (($totalCasillas - $conteo['libre']) / $totalCasillas) : 0;
 $circ = 282.7;
 $dashOff = number_format($circ * $pctOcup, 1, '.', '');
@@ -68,7 +70,7 @@ $dashOff = number_format($circ * $pctOcup, 1, '.', '');
             <div class="floor-pills mb-3" role="group" aria-label="Seleccionar piso">
                 <?php foreach ($datosCroquis['pisos'] as $numPiso => $lista) : ?>
                     <?php $libresPiso = count(array_filter($lista, static fn($c) => $c['estado'] === 'libre')); ?>
-                    <button type="button" class="floor-pill" data-piso="<?= (int) $numPiso ?>" aria-pressed="<?= $numPiso === 1 ? 'true' : 'false' ?>">
+                    <button type="button" class="floor-pill" data-piso="<?= (int) $numPiso ?>" aria-pressed="<?= $numPiso === $pisoActivo ? 'true' : 'false' ?>">
                         P<?= (int) $numPiso ?> (<?= $libresPiso ?>/6)
                     </button>
                 <?php endforeach; ?>
@@ -81,7 +83,7 @@ $dashOff = number_format($circ * $pctOcup, 1, '.', '');
                     $filaSuperior = array_slice($lista, 0, 3);
                     $filaInferior = array_slice($lista, 3, 3);
                     ?>
-                    <article class="piso-card" data-piso="<?= (int) $numPiso ?>" <?= $numPiso !== 1 ? 'hidden' : '' ?>>
+                    <article class="piso-card" data-piso="<?= (int) $numPiso ?>" <?= $numPiso !== $pisoActivo ? 'hidden' : '' ?>>
                         <div class="piso-titulo">
                             <strong><?= $numPiso === 1 ? 'Piso 1 (Planta Baja)' : 'Piso ' . (int) $numPiso ?></strong>
                             <span class="badge rounded-pill <?= $libresPiso > 0 ? 'text-bg-success' : 'text-bg-danger' ?>"><?= $libresPiso ?>/6 libres</span>

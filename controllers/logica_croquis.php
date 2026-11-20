@@ -56,13 +56,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         volverCroquis('danger', 'Casilla no válida.');
     }
 
-    $consulta = $pdo->prepare('SELECT codigo, estado FROM casillas WHERE id_casilla = ? LIMIT 1');
+    $consulta = $pdo->prepare('SELECT piso, codigo, estado FROM casillas WHERE id_casilla = ? LIMIT 1');
     $consulta->execute([$idCasilla]);
     $casilla = $consulta->fetch();
 
     if (!$casilla) {
         volverCroquis('danger', 'La casilla no existe.');
     }
+
+    $_SESSION['piso_activo'] = (int) $casilla['piso'];
 
     if ($casilla['estado'] === 'reservado') {
         volverCroquis('danger', 'Casilla ' . $casilla['codigo'] . ' en reserva (se automatizará en Sprint 3).');
