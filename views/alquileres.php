@@ -1,6 +1,6 @@
-<section id="seccion-alquiler" class="row g-3 g-lg-4 mb-4" aria-label="Alquiler de puestos">
+<section id="seccion-alquiler" class="row g-3 g-lg-4 mb-4 align-items-start" aria-label="Alquiler de puestos">
     <div class="col-12 col-lg-5">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h2 class="h5 mb-3">Alquilar Puesto por Horas</h2>
                 <?php if ($idUsuarioActual <= 0) : ?>
@@ -64,7 +64,7 @@
     </div>
 
     <div class="col-12 col-lg-7">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h2 class="h5 mb-3"><?= $esAdmin ? 'Todos los Alquileres y Reservas' : 'Mis Alquileres' ?></h2>
                 <?php if ($idUsuarioActual <= 0 && !$esAdmin) : ?>
@@ -72,7 +72,7 @@
                 <?php elseif (empty($alquileresVisibles)) : ?>
                     <p class="text-body-secondary mb-0">No hay alquileres registrados todavía.</p>
                 <?php else : ?>
-                    <div class="table-responsive">
+                    <div class="table-responsive tabla-scroll">
                         <table class="table table-sm table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>

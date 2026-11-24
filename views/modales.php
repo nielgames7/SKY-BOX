@@ -59,13 +59,14 @@
     </div>
 </dialog>
 
-<?php if ($esAdmin && !empty($alerta['salida']['qr_simulado'])) : ?>
+<?php if ($esAdmin) : ?>
     <?php
-    $sal = $alerta['salida'];
-    $qrSim = $sal['qr_simulado'];
-    $qrImg = (string) ($qrSim['qr_imagen'] ?? '');
+    $sal = $alerta['salida'] ?? [];
+    $qrSim = $sal['qr_simulado'] ?? [];
+    $qrImg = (string) ($qrSim['qr_imagen'] ?? 'assets/qr/qr_pago.png');
+    $autoOpenQr = !empty($qrSim) ? 'true' : 'false';
     ?>
-    <dialog id="modal-qr-salida" class="auth-dialog qr-dialog" closedby="any" data-auto-open="true" aria-labelledby="titulo-modal-qr">
+    <dialog id="modal-qr-salida" class="auth-dialog qr-dialog" closedby="any" data-auto-open="<?= $autoOpenQr ?>" aria-labelledby="titulo-modal-qr">
         <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-body-tertiary">
             <h2 id="titulo-modal-qr" class="h5 mb-0">Comprobante de Pago QR</h2>
             <form method="dialog">
@@ -73,15 +74,13 @@
             </form>
         </div>
         <div class="p-4 text-center">
-            <?php if ($qrImg !== '' && is_file(__DIR__ . '/../' . $qrImg)) : ?>
-                <img src="<?= h($qrImg) ?>?t=<?= time() ?>" alt="QR Local de Pago" class="qr-img-local mx-auto mb-3">
-            <?php endif; ?>
-            <div class="fs-4 fw-bold text-primary mb-1"><?= number_format((float) $sal['total_pagado'], 2) ?> Bs</div>
-            <div class="small text-body-secondary mb-2">Estadía: <strong><?= h((string) $sal['tiempo']) ?></strong> &middot; Puesto: <strong><?= h((string) ($sal['casilla'] ?? '-')) ?></strong></div>
+            <img id="qr-modal-img" src="<?= h($qrImg) ?>?t=<?= time() ?>" alt="QR Local de Pago" class="qr-img-local mx-auto mb-3">
+            <div id="qr-modal-monto" class="fs-4 fw-bold text-primary mb-1"><?= number_format((float) ($sal['total_pagado'] ?? 5), 2) ?> Bs</div>
+            <div id="qr-modal-meta" class="small text-body-secondary mb-2">Estadía: <strong><?= h((string) ($sal['tiempo'] ?? '0m')) ?></strong> &middot; Puesto: <strong><?= h((string) ($sal['casilla'] ?? '-')) ?></strong></div>
             <div class="small bg-body-tertiary border rounded p-2 text-start mb-3">
-                <div><strong>Ticket:</strong> <span class="font-monospace"><?= h((string) $sal['token_qr']) ?></span></div>
-                <div><strong>RFID:</strong> <code><?= h((string) $sal['uid_rfid']) ?></code></div>
-                <div><strong>Referencia:</strong> <code><?= h((string) $qrSim['referencia']) ?></code></div>
+                <div><strong>Ticket:</strong> <span id="qr-modal-ticket" class="font-monospace"><?= h((string) ($sal['token_qr'] ?? '-')) ?></span></div>
+                <div><strong>RFID:</strong> <code id="qr-modal-rfid"><?= h((string) ($sal['uid_rfid'] ?? '-')) ?></code></div>
+                <div><strong>Referencia:</strong> <code id="qr-modal-ref"><?= h((string) ($qrSim['referencia'] ?? '-')) ?></code></div>
             </div>
             <div class="d-grid gap-2">
                 <form action="controllers/registrar_salida.php" method="POST" class="d-grid">

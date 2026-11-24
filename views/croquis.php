@@ -28,7 +28,7 @@ function renderPuesto(array $casilla, int $numero, string $orientacion, bool $es
         } elseif ($estado === 'reservado' && $reserva) {
             $contenido .= '<span class="puesto-extra">' . h((string) ($reserva['codigo_reserva'] ?? '')) . '</span>';
         }
-        echo '<form action="controllers/logica_croquis.php" method="POST" class="puesto-form">'
+        echo '<form action="controllers/logica_croquis.php" method="POST" class="puesto-form" data-casilla-wrap="' . (int) $casilla['id_casilla'] . '" data-casilla-codigo="' . h($codigo) . '" data-casilla-piso="' . (int) $casilla['piso'] . '" data-casilla-num="' . $numero . '">'
             . csrfCampo()
             . '<input type="hidden" name="id_casilla" value="' . (int) $casilla['id_casilla'] . '">'
             . '<button type="submit" class="' . $clases . '" title="' . h($codigo) . ': ' . ($etiquetas[$estado] ?? h($estado)) . '">' . $contenido . '</button>'
@@ -39,7 +39,7 @@ function renderPuesto(array $casilla, int $numero, string $orientacion, bool $es
     $attrs = $estado === 'libre'
         ? ' data-pick-casilla="' . (int) $casilla['id_casilla'] . '" data-pick-piso="' . (int) $casilla['piso'] . '"'
         : '';
-    echo '<div class="' . $clases . '"' . $attrs . ' title="' . h($codigo) . ': ' . ($etiquetas[$estado] ?? h($estado)) . '">' . $contenido . '</div>';
+    echo '<div class="' . $clases . '" data-casilla-wrap="' . (int) $casilla['id_casilla'] . '" data-casilla-codigo="' . h($codigo) . '" data-casilla-piso="' . (int) $casilla['piso'] . '" data-casilla-num="' . $numero . '"' . $attrs . ' title="' . h($codigo) . ': ' . ($etiquetas[$estado] ?? h($estado)) . '">' . $contenido . '</div>';
 }
 
 $pisoActivo = (int) ($_SESSION['piso_activo'] ?? 1);
@@ -124,7 +124,7 @@ $dashOff = number_format($circ * $pctOcup, 1, '.', '');
         <aside class="sb-panel resumen-aside p-4 text-center" aria-label="Tarifa y disponibilidad">
             <div class="pb-3 border-bottom">
                 <div class="small text-body-secondary fw-semibold text-uppercase">Tarifa Base</div>
-                <div class="tarifa-valor mt-1"><?= number_format($precioHoraBase, 2) ?> Bs/h</div>
+                <div class="tarifa-valor mt-1"><?= number_format($precioHoraBase, 2) ?> Bs/s</div>
             </div>
 
             <div class="py-2">

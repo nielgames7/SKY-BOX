@@ -40,29 +40,20 @@ function calcularLiquidacion($registro)
 {
     $entrada = new DateTimeImmutable($registro['fecha_ingreso']);
     $salida = new DateTimeImmutable('now');
-    $minutos = max(0, (int) ceil(($salida->getTimestamp() - $entrada->getTimestamp()) / 60));
+    $segundos = max(1, $salida->getTimestamp() - $entrada->getTimestamp());
 
-    $horaBs = (float) ($registro['costo_por_hora'] ?? 5.0);
-    $fraccionBs = (float) ($registro['costo_fraccion'] ?? 3.0);
-    $tolerancia = (int) ($registro['minutos_tolerancia'] ?? 15);
+    $segBs = (float) ($registro['costo_por_hora'] ?? 0.05);
+    $fraccionBs = (float) ($registro['costo_fraccion'] ?? 0.50);
+    $toleranciaSeg = (int) ($registro['minutos_tolerancia'] ?? 5);
 
-    if ($minutos <= 60) {
-        $totalBs = $horaBs;
-    } else {
-        $excedente = $minutos - 60;
-        $totalBs = $horaBs + (intdiv($excedente, 60) * $horaBs);
-        $resto = $excedente % 60;
-        if ($resto > $tolerancia) {
-            $totalBs += ($fraccionBs > 0 && $resto <= 30) ? $fraccionBs : $horaBs;
-        }
-    }
+    $totalBs = ($segundos * $segBs) + ($segundos > $toleranciaSeg ? $fraccionBs : 0.0);
 
-    $h = intdiv($minutos, 60);
-    $m = $minutos % 60;
+    $m = intdiv($segundos, 60);
+    $s = $segundos % 60;
 
     return [
-        'minutos' => $minutos,
-        'tiempo' => ($h > 0 ? "{$h}h " : '') . "{$m}m",
+        'minutos' => $segundos,
+        'tiempo' => ($m > 0 ? "{$m}m " : '') . "{$s}s",
         'total_bs' => round($totalBs, 2),
         'fecha_salida' => $salida->format('Y-m-d H:i:s'),
     ];
@@ -176,6 +167,7 @@ function procesarSalida($pdo, $entrada)
         $eventoPantalla = [
             'evento' => $qr['referencia'],
             'ticket' => (string) $registro['token_qr'],
+            'uid_rfid' => (string) $registro['uid_rfid'],
             'casilla' => (string) ($registro['casilla'] ?? '-'),
             'tiempo' => $liq['tiempo'],
             'total_bs' => number_format((float) $liq['total_bs'], 2, '.', ''),
@@ -202,7 +194,7 @@ function procesarSalida($pdo, $entrada)
     ];
 }
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+if (basename($_SERVER['SCRIPT_FILENAME'] ?? '') === 'registrar_salida.php' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (!validarCsrf()) {
         responderSalida('danger', 'Sesión expirada o solicitud inválida. Recarga la página.');
     }

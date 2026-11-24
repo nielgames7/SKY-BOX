@@ -142,9 +142,9 @@ INSERT INTO usuarios (nombre, correo, usuario, password, rol) VALUES
 ('Operador Portería', 'operador@skybox.test', 'operador', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'operador'),
 ('Luis Vega', 'cliente1@skybox.test', 'cliente1', '$2y$10$jI0lUbEw/UCmsdOPjHwTr.BtyDHdxmnTdcgpfSXVOiINdHFam4GhS', 'usuario');
 
--- Tarifa estándar
+-- Tarifa estándar (modo demostración: 0.05 Bs/seg, fracción 0.50 Bs, 5 seg tolerancia)
 INSERT INTO tarifas (nombre, costo_por_hora, costo_fraccion, minutos_tolerancia, activa) VALUES
-('Tarifa General Vehicular', 5.00, 3.00, 15, 1);
+('Tarifa General Vehicular', 0.05, 0.50, 5, 1);
 
 -- 60 casillas distribuidas en 10 pisos (6 puestos por piso, con pines del ESP32)
 INSERT INTO casillas (piso, codigo, estado, pin_sensor) VALUES

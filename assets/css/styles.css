@@ -442,6 +442,17 @@ dialog.auth-dialog::backdrop {
   background: rgba(15, 23, 42, 0.58);
 }
 
+.tabla-scroll {
+  max-height: 245px;
+  overflow-y: auto;
+}
+
+.tabla-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 @media (max-width: 575.98px) {
   .parqueo {
     padding: 0.6rem;

@@ -164,4 +164,155 @@
   if (qrModal && qrModal.dataset.autoOpen === 'true' && typeof qrModal.showModal === 'function') {
     qrModal.showModal();
   }
+
+  // Actualización automática en tiempo real del croquis para sensores IoT y RFID
+  if (floorCards.length > 0) {
+    const SVG_AUTO = '<svg class="auto" viewBox="0 0 40 70" aria-hidden="true">'
+      + '<rect x="3" y="2" width="34" height="66" rx="9" class="auto-carroceria"/>'
+      + '<rect x="7" y="13" width="26" height="12" rx="3" class="auto-vidrio"/>'
+      + '<rect x="7" y="46" width="26" height="9" rx="3" class="auto-vidrio"/>'
+      + '<rect x="9" y="27" width="22" height="17" rx="2" class="auto-techo"/>'
+      + '</svg>';
+    const ETIQUETAS = { libre: 'Libre', ocupado: 'Ocupado', reservado: 'Reservado' };
+    const ringFill = document.querySelector('.ring-fill');
+    const ringNum = document.querySelector('.ring-num');
+    const cntOcup = document.querySelector('.resumen-aside .text-danger.fs-5');
+    const cntRes = document.querySelector('.resumen-aside .text-warning.fs-5');
+    let lastHash = '';
+    let lastPagoEvt = null;
+    let lastFirmaReg = null;
+
+    const refrescarTablasAdmin = async () => {
+      try {
+        const htmlResp = await fetch(window.location.href, { cache: 'no-store' });
+        if (!htmlResp.ok) return;
+        const doc = new DOMParser().parseFromString(await htmlResp.text(), 'text/html');
+        ['seccion-operacion', 'seccion-historial'].forEach((id) => {
+          const nuevo = doc.getElementById(id);
+          const actual = document.getElementById(id);
+          if (nuevo && actual) actual.innerHTML = nuevo.innerHTML;
+        });
+        const recNuevo = doc.querySelector('.resumen-aside .text-primary.fs-5');
+        const recActual = document.querySelector('.resumen-aside .text-primary.fs-5');
+        if (recNuevo && recActual) recActual.textContent = recNuevo.textContent;
+      } catch (_) {}
+    };
+
+    const actualizarCroquisVivo = async () => {
+      try {
+        const resp = await fetch('controllers/api_iot.php?accion=estado', { cache: 'no-store' });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (!data || !data.ok || !Array.isArray(data.casillas)) return;
+
+        const firmaReg = data.firma_registros || '';
+        if (lastFirmaReg === null) {
+          lastFirmaReg = firmaReg;
+        } else if (firmaReg !== lastFirmaReg) {
+          lastFirmaReg = firmaReg;
+          await refrescarTablasAdmin();
+        }
+
+        const evtPago = data.ultimo_pago?.evento || '';
+        if (lastPagoEvt === null) {
+          lastPagoEvt = evtPago;
+        } else if (evtPago !== lastPagoEvt) {
+          lastPagoEvt = evtPago;
+          if (qrModal && typeof qrModal.showModal === 'function') {
+            if (evtPago !== '') {
+              const p = data.ultimo_pago;
+              const img = document.getElementById('qr-modal-img');
+              if (img) img.src = `${p.qr_imagen || 'assets/qr/qr_pago.png'}?t=${Date.now()}`;
+              const m = document.getElementById('qr-modal-monto');
+              if (m) m.textContent = `${p.total_bs || '5.00'} Bs`;
+              const meta = document.getElementById('qr-modal-meta');
+              if (meta) meta.innerHTML = `Estadía: <strong>${p.tiempo || '0m'}</strong> &middot; Puesto: <strong>${p.casilla || '-'}</strong>`;
+              const tk = document.getElementById('qr-modal-ticket');
+              if (tk) tk.textContent = p.ticket || '-';
+              const rf = document.getElementById('qr-modal-rfid');
+              if (rf) rf.textContent = p.uid_rfid || '-';
+              const ref = document.getElementById('qr-modal-ref');
+              if (ref) ref.textContent = evtPago;
+              if (!qrModal.open) qrModal.showModal();
+            } else if (qrModal.open) {
+              qrModal.close();
+            }
+          }
+        }
+
+        const hash = data.casillas.map((c) => `${c.id_casilla}:${c.estado}:${c.uid_rfid || ''}`).join('|');
+        if (hash === lastHash) return;
+        lastHash = hash;
+
+        const libresPorPiso = {};
+        data.casillas.forEach((cas) => {
+          libresPorPiso[cas.piso] = (libresPorPiso[cas.piso] || 0) + (cas.estado === 'libre' ? 1 : 0);
+          const wrap = document.querySelector(`[data-casilla-wrap="${cas.id_casilla}"]`);
+          if (!wrap) return;
+          const esForm = wrap.tagName === 'FORM';
+          const btn = esForm ? wrap.querySelector('button') : wrap;
+          if (!btn) return;
+
+          const numStr = String(wrap.dataset.casillaNum || '1').padStart(2, '0');
+          const orient = btn.classList.contains('puesto-abajo') ? 'abajo' : 'arriba';
+          btn.className = `puesto puesto-${cas.estado} puesto-${orient}`;
+          btn.title = `${cas.codigo}: ${ETIQUETAS[cas.estado] || cas.estado}`;
+
+          let extra = '';
+          if (esForm) {
+            if (cas.estado === 'ocupado' && cas.uid_rfid) {
+              extra = `<span class="puesto-extra font-monospace">${cas.uid_rfid}</span>`;
+            } else if (cas.estado === 'reservado' && cas.codigo_reserva) {
+              extra = `<span class="puesto-extra">${cas.codigo_reserva}</span>`;
+            }
+          } else {
+            if (cas.estado === 'libre') {
+              btn.dataset.pickCasilla = String(cas.id_casilla);
+              btn.dataset.pickPiso = String(cas.piso);
+            } else {
+              delete btn.dataset.pickCasilla;
+              delete btn.dataset.pickPiso;
+            }
+          }
+
+          let icono = '';
+          if (cas.estado === 'ocupado') icono = SVG_AUTO;
+          else if (cas.estado === 'reservado') icono = '<span class="puesto-icono">R</span>';
+
+          btn.innerHTML = `<span class="puesto-numero">${numStr}</span>${icono}<span class="puesto-codigo">${cas.codigo}</span><span class="puesto-estado">${ETIQUETAS[cas.estado] || cas.estado}</span>${extra}`;
+        });
+
+        Object.entries(libresPorPiso).forEach(([piso, libres]) => {
+          const pill = document.querySelector(`.floor-pill[data-piso="${piso}"]`);
+          if (pill) pill.textContent = `P${piso} (${libres}/6)`;
+          const badge = document.querySelector(`.piso-card[data-piso="${piso}"] .piso-titulo .badge`);
+          if (badge) {
+            badge.className = `badge rounded-pill ${libres > 0 ? 'text-bg-success' : 'text-bg-danger'}`;
+            badge.textContent = `${libres}/6 libres`;
+          }
+        });
+
+        const total = data.conteo.total || 60;
+        const pctOcup = total > 0 ? (total - data.conteo.libre) / total : 0;
+        if (ringFill) ringFill.setAttribute('stroke-dashoffset', (282.7 * pctOcup).toFixed(1));
+        if (ringNum) ringNum.textContent = String(data.conteo.libre);
+        if (cntOcup) cntOcup.textContent = String(data.conteo.ocupado);
+        if (cntRes) cntRes.textContent = String(data.conteo.reservado);
+      } catch (_) {}
+    };
+
+    setInterval(actualizarCroquisVivo, 1500);
+    setInterval(() => {
+      const ahoraSeg = Math.floor(Date.now() / 1000);
+      document.querySelectorAll('[data-ingreso-ts]').forEach((el) => {
+        const ts = parseInt(el.dataset.ingresoTs || '0', 10);
+        if (ts > 0) {
+          const seg = Math.max(1, ahoraSeg - ts);
+          const m = Math.floor(seg / 60);
+          const s = seg % 60;
+          el.textContent = (m > 0 ? `${m}m ` : '') + `${s}s`;
+        }
+      });
+    }, 1000);
+  }
 })();

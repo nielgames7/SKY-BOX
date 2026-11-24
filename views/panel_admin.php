@@ -1,6 +1,6 @@
-<section id="seccion-operacion" class="row g-3 g-lg-4 mb-4" aria-label="Control operativo de administrador">
+<section id="seccion-operacion" class="row g-3 g-lg-4 mb-4 align-items-start" aria-label="Control operativo de administrador">
     <div class="col-12 col-xl-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h2 class="h5 mb-3">Registrar Ingreso (RFID)</h2>
                 <form action="controllers/registrar_ingreso.php" method="POST" class="row g-3">
@@ -22,7 +22,7 @@
                         <label for="id_tarifa" class="form-label fw-semibold">Tarifa *</label>
                         <select id="id_tarifa" name="id_tarifa" class="form-select" required>
                             <?php foreach ($tarifas as $t) : ?>
-                                <option value="<?= (int) $t['id_tarifa'] ?>"><?= h((string) $t['nombre']) ?> (<?= number_format((float) $t['costo_por_hora'], 2) ?> Bs/h)</option>
+                                <option value="<?= (int) $t['id_tarifa'] ?>"><?= h((string) $t['nombre']) ?> (<?= number_format((float) $t['costo_por_hora'], 2) ?> Bs/s)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -80,15 +80,15 @@
     </div>
 </section>
 
-<section class="row g-3 g-lg-4 mb-4" aria-label="Salidas y tarifas">
+<section id="seccion-historial" class="row g-3 g-lg-4 mb-4 align-items-start" aria-label="Salidas y tarifas">
     <div class="col-12 col-xl-7">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h2 class="h5 mb-3">Historial de Salidas y Cobros</h2>
                 <?php if (empty($salidasRecientes)) : ?>
                     <p class="text-body-secondary mb-0">Aún no se registraron salidas cobradas.</p>
                 <?php else : ?>
-                    <div class="table-responsive">
+                    <div class="table-responsive tabla-scroll">
                         <table class="table table-sm align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
@@ -107,7 +107,7 @@
                                         <td><span class="font-monospace small"><?= h((string) $sal['token_qr']) ?></span></td>
                                         <td><code><?= h((string) $sal['uid_rfid']) ?></code></td>
                                         <td><?= h((string) $sal['casilla']) ?></td>
-                                        <td><?= intdiv($m, 60) > 0 ? intdiv($m, 60) . 'h ' . ($m % 60) . 'm' : ($m % 60) . 'm' ?></td>
+                                        <td><?= intdiv($m, 60) > 0 ? intdiv($m, 60) . 'm ' . ($m % 60) . 's' : $m . 's' ?></td>
                                         <td><?= h((string) $sal['metodo_pago']) ?></td>
                                         <td><strong><?= number_format((float) $sal['total_pagado'], 2) ?> Bs</strong></td>
                                     </tr>
@@ -121,7 +121,7 @@
     </div>
 
     <div class="col-12 col-xl-5">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h2 class="h5 mb-3">Precios y Tarifas (Bs)</h2>
                 <?php foreach ($tarifas as $t) : ?>
@@ -131,15 +131,15 @@
                         <input type="hidden" name="id_tarifa" value="<?= (int) $t['id_tarifa'] ?>">
                         <div class="col-12 fw-semibold small"><?= h((string) $t['nombre']) ?></div>
                         <div class="col-4">
-                            <label class="form-label small mb-0">Bs/Hora</label>
-                            <input type="number" name="costo_por_hora" step="0.50" min="0.50" class="form-control form-control-sm" value="<?= number_format((float) $t['costo_por_hora'], 2, '.', '') ?>" required>
+                            <label class="form-label small mb-0">Bs/Seg</label>
+                            <input type="number" name="costo_por_hora" step="0.01" min="0.01" class="form-control form-control-sm" value="<?= number_format((float) $t['costo_por_hora'], 2, '.', '') ?>" required>
                         </div>
                         <div class="col-4">
                             <label class="form-label small mb-0">Fracción Bs</label>
-                            <input type="number" name="costo_fraccion" step="0.50" min="0" class="form-control form-control-sm" value="<?= number_format((float) $t['costo_fraccion'], 2, '.', '') ?>" required>
+                            <input type="number" name="costo_fraccion" step="0.05" min="0" class="form-control form-control-sm" value="<?= number_format((float) $t['costo_fraccion'], 2, '.', '') ?>" required>
                         </div>
                         <div class="col-4">
-                            <label class="form-label small mb-0">Tol. (min)</label>
+                            <label class="form-label small mb-0">Tol. (seg)</label>
                             <input type="number" name="minutos_tolerancia" min="0" class="form-control form-control-sm" value="<?= (int) $t['minutos_tolerancia'] ?>" required>
                         </div>
                         <div class="col-12 d-grid mt-2">
@@ -153,9 +153,9 @@
 </section>
 
 <?php if ($rolActual === 'admin') : ?>
-<section class="row g-3 g-lg-4" aria-label="Gestión de administradores y usuarios">
+<section class="row g-3 g-lg-4 align-items-start" aria-label="Gestión de administradores y usuarios">
     <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h2 class="h5 mb-3">Registrar Administrador / Cuenta</h2>
                 <form action="controllers/auth.php" method="POST" class="row g-2">
@@ -194,10 +194,10 @@
     </div>
 
     <div class="col-12 col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm">
             <div class="card-body">
                 <h2 class="h5 mb-3">Usuarios y Roles</h2>
-                <div class="table-responsive">
+                <div class="table-responsive tabla-scroll">
                     <table class="table table-sm align-middle mb-0">
                         <thead class="table-light">
                             <tr>

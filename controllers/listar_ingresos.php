@@ -5,19 +5,13 @@ function calcularTiempoTranscurrido(string $fechaIngreso): string
 {
     $entrada = new DateTimeImmutable($fechaIngreso);
     $ahora = new DateTimeImmutable('now');
-    if ($entrada > $ahora) {
-        return '0m';
+    if ($entrada >= $ahora) {
+        return '1s';
     }
-    $diff = $entrada->diff($ahora);
-    $partes = [];
-    if ($diff->days > 0) {
-        $partes[] = $diff->days . 'd';
-    }
-    if ($diff->h > 0 || $diff->days > 0) {
-        $partes[] = $diff->h . 'h';
-    }
-    $partes[] = $diff->i . 'm';
-    return implode(' ', $partes);
+    $seg = $ahora->getTimestamp() - $entrada->getTimestamp();
+    $m = intdiv($seg, 60);
+    $s = $seg % 60;
+    return ($m > 0 ? "{$m}m " : '') . "{$s}s";
 }
 
 $ingresosActivos = [];
@@ -40,7 +34,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
     }
 }
 ?>
-<section class="card border-0 shadow-sm h-100" aria-labelledby="titulo-ingresos-activos">
+<section class="card border-0 shadow-sm" aria-labelledby="titulo-ingresos-activos">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 id="titulo-ingresos-activos" class="h5 mb-0">Vehículos en Parqueo (En Curso)</h2>
@@ -52,7 +46,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
         <?php elseif (empty($ingresosActivos)) : ?>
             <p class="text-body-secondary mb-0">No hay vehículos registrados actualmente en el parqueo.</p>
         <?php else : ?>
-            <div class="table-responsive">
+            <div class="table-responsive tabla-scroll">
                 <table class="table table-sm table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
@@ -74,8 +68,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
                                 <td><?= htmlspecialchars((string) $fila['placa'], ENT_QUOTES, 'UTF-8') ?></td>
                                 <td><?= htmlspecialchars((string) $fila['casilla'], ENT_QUOTES, 'UTF-8') ?></td>
                                 <td class="d-none d-md-table-cell"><?= htmlspecialchars((string) $fila['tarifa'], ENT_QUOTES, 'UTF-8') ?></td>
-                                <td class="text-nowrap"><?= htmlspecialchars(date('d/m/Y H:i', strtotime((string) $fila['fecha_ingreso'])), ENT_QUOTES, 'UTF-8') ?></td>
-                                <td class="text-nowrap"><?= htmlspecialchars(calcularTiempoTranscurrido((string) $fila['fecha_ingreso']), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td class="text-nowrap"><?= htmlspecialchars(date('d/m/Y H:i:s', strtotime((string) $fila['fecha_ingreso'])), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td class="text-nowrap fw-semibold font-monospace" data-ingreso-ts="<?= (int) strtotime((string) $fila['fecha_ingreso']) ?>"><?= htmlspecialchars(calcularTiempoTranscurrido((string) $fila['fecha_ingreso']), ENT_QUOTES, 'UTF-8') ?></td>
                                 <td class="text-nowrap">
                                     <form action="controllers/registrar_salida.php" method="POST" class="d-inline-flex gap-1">
                                         <?= csrfCampo() ?>
