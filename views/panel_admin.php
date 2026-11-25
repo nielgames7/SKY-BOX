@@ -183,7 +183,7 @@
                     </div>
                     <div class="col-12">
                         <label for="adm-pass" class="form-label small fw-semibold mb-1">Contraseña *</label>
-                        <input type="password" id="adm-pass" name="password" class="form-control form-control-sm" minlength="4" autocomplete="new-password" required>
+                        <input type="password" id="adm-pass" name="password" class="form-control form-control-sm" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}" title="Mínimo 8 caracteres, con mayúscula, minúscula y número" autocomplete="new-password" required>
                     </div>
                     <div class="col-12 d-grid mt-2">
                         <button type="submit" class="btn btn-sm btn-primary">Crear Cuenta</button>

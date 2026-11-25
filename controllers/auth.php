@@ -75,8 +75,11 @@ function crearCuenta(PDO $pdo, array $datos, string $rol): array
     $usuario = trim((string) ($datos['usuario'] ?? ''));
     $clave = (string) ($datos['password'] ?? '');
 
-    if ($nombre === '' || strlen($usuario) < 3 || strlen($clave) < 4) {
-        volverInicio('danger', 'Completa nombre, usuario (mín. 3 caracteres) y contraseña (mín. 4 caracteres).');
+    if ($nombre === '' || strlen($usuario) < 3) {
+        volverInicio('danger', 'Completa nombre y usuario (mín. 3 caracteres).');
+    }
+    if (strlen($clave) < 8 || !preg_match('/[A-Z]/', $clave) || !preg_match('/[a-z]/', $clave) || !preg_match('/[0-9]/', $clave)) {
+        volverInicio('danger', 'La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula y número.');
     }
     if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
         volverInicio('danger', 'Ingresa un correo electrónico válido.');

@@ -48,9 +48,10 @@
             <div class="col-12">
                 <label for="reg-pass" class="form-label fw-semibold">Contraseña *</label>
                 <div class="input-group">
-                    <input type="password" id="reg-pass" name="password" class="form-control" minlength="4" autocomplete="new-password" required>
+                    <input type="password" id="reg-pass" name="password" class="form-control" minlength="8" pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}" title="Mínimo 8 caracteres, con mayúscula, minúscula y número" autocomplete="new-password" required>
                     <button type="button" class="btn btn-outline-secondary" data-toggle-pass="reg-pass">Ver</button>
                 </div>
+                <div class="form-text">Mínimo 8 caracteres con mayúscula, minúscula y número.</div>
             </div>
             <div class="col-12 d-grid">
                 <button type="submit" class="btn btn-success">Crear Cuenta</button>
